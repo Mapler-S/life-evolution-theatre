@@ -1,0 +1,77 @@
+# ===========================
+# 依赖
+# ===========================
+node_modules/
+.pnp
+.pnp.js
+
+# ===========================
+# 构建产物
+# ===========================
+dist/
+dist-ssr/
+build/
+
+# ===========================
+# 敏感信息 — 绝对不提交
+# ===========================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+*.key
+*.pem
+secrets.json
+secrets.*.json
+config.local.*
+
+# ===========================
+# 编辑器与IDE
+# ===========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ===========================
+# 日志
+# ===========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===========================
+# 缓存
+# ===========================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+node_modules/.cache/
+
+# ===========================
+# 测试覆盖率
+# ===========================
+coverage/
+.nyc_output/
+
+# ===========================
+# 运行时文件
+# ===========================
+*.pid
+*.seed
+*.pid.lock
+
+
+PLAN.md
