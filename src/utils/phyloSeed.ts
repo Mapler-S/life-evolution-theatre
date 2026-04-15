@@ -120,6 +120,72 @@ export const PHYLO_SEED: PhyloTreeNode = {
 }
 
 /* ══════════════════════════════════════════════════
+   植物界演化树 — 约 40 个节点
+   ══════════════════════════════════════════════════ */
+
+export const PHYLO_SEED_PLANTAE: PhyloTreeNode = {
+  id: 'plantae', name: 'Plantae', nameZh: '植物界', rank: 'kingdom', extant: true, size: 10,
+  description: '光合自养真核生物，约 5 亿年前登陆，彻底改变了地球大气和生态。',
+  children: [
+    /* ── 绿藻（基部） ── */
+    { id: 'chlorophyta', name: 'Chlorophyta', nameZh: '绿藻门', rank: 'phylum', extant: true, size: 5, children: [
+      { id: 'ulvophyceae', name: 'Ulvophyceae', nameZh: '石莼纲', rank: 'class', extant: true, size: 4 },
+      { id: 'chlorophyceae', name: 'Chlorophyceae', nameZh: '绿藻纲', rank: 'class', extant: true, size: 4 },
+      { id: 'charophyceae', name: 'Charophyceae', nameZh: '轮藻纲', rank: 'class', extant: true, size: 3, description: '陆生植物最近的藻类亲缘。' },
+    ]},
+
+    /* ── 苔藓 ── */
+    { id: 'bryophyta', name: 'Bryophyta', nameZh: '苔藓植物门', rank: 'phylum', extant: true, size: 5, children: [
+      { id: 'marchantiophyta', name: 'Marchantiophyta', nameZh: '地钱', rank: 'class', extant: true, size: 3 },
+      { id: 'bryopsida', name: 'Bryopsida', nameZh: '藓纲', rank: 'class', extant: true, size: 5 },
+      { id: 'anthocerotophyta', name: 'Anthocerotophyta', nameZh: '角苔', rank: 'class', extant: true, size: 2 },
+    ]},
+
+    /* ── 石松 ── */
+    { id: 'lycopodiophyta', name: 'Lycopodiophyta', nameZh: '石松门', rank: 'phylum', extant: true, size: 5, children: [
+      { id: 'lycopodiopsida', name: 'Lycopodiopsida', nameZh: '石松纲', rank: 'class', extant: true, size: 3 },
+      { id: 'isoetopsida', name: 'Isoetopsida', nameZh: '水韭纲', rank: 'class', extant: true, size: 2 },
+      { id: 'lepidodendrales', name: 'Lepidodendrales', nameZh: '鳞木目', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 7, description: '石炭纪巨型树状石松，高达 40 米，是煤炭的主要来源。' },
+      { id: 'sigillariaceae', name: 'Sigillariaceae', nameZh: '封印木', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 5, description: '石炭纪沼泽森林的另一类巨型石松植物。' },
+    ]},
+
+    /* ── 蕨类 ── */
+    { id: 'polypodiophyta', name: 'Polypodiophyta', nameZh: '蕨类植物门', rank: 'phylum', extant: true, size: 7, children: [
+      { id: 'polypodiopsida', name: 'Polypodiopsida', nameZh: '真蕨纲', rank: 'class', extant: true, size: 7 },
+      { id: 'equisetopsida', name: 'Equisetopsida', nameZh: '木贼纲', rank: 'class', extant: true, size: 3 },
+      { id: 'marattiopsida', name: 'Marattiopsida', nameZh: '合囊蕨纲', rank: 'class', extant: true, size: 3 },
+      { id: 'calamitaceae', name: 'Calamitaceae', nameZh: '芦木', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 6, description: '石炭纪巨型木贼，高达 20 米。' },
+      { id: 'cladoxylopsida', name: 'Cladoxylopsida', nameZh: '枝蕨纲', rank: 'class', extant: false, extinctInEvent: EX.DEV, size: 4, description: '泥盆纪最早的树状植物之一。' },
+    ]},
+
+    /* ── 种子蕨（已灭绝） ── */
+    { id: 'pteridospermatophyta', name: 'Pteridospermatophyta', nameZh: '种子蕨门', rank: 'phylum', extant: false, extinctInEvent: EX.KPG, size: 5, description: '石炭纪至白垩纪的原始种子植物，兼具蕨叶与种子。', children: [
+      { id: 'medullosales', name: 'Medullosales', nameZh: '髓木目', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 4 },
+      { id: 'glossopteridales', name: 'Glossopteridales', nameZh: '舌羊齿目', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 6, description: '冈瓦纳大陆标志植物，证明大陆漂移的关键化石。' },
+      { id: 'caytoniales', name: 'Caytoniales', nameZh: '开通目', rank: 'order', extant: false, extinctInEvent: EX.KPG, size: 3 },
+    ]},
+
+    /* ── 裸子植物 ── */
+    { id: 'gymnospermae', name: 'Gymnospermae', nameZh: '裸子植物', rank: 'phylum', extant: true, size: 7, children: [
+      { id: 'cycadopsida', name: 'Cycadopsida', nameZh: '苏铁纲', rank: 'class', extant: true, size: 4, description: '中生代极为繁盛，如今仅存约 300 种。' },
+      { id: 'ginkgoopsida', name: 'Ginkgoopsida', nameZh: '银杏纲', rank: 'class', extant: true, size: 3, description: '仅存银杏一种，"活化石"。' },
+      { id: 'pinopsida', name: 'Pinopsida', nameZh: '松柏纲', rank: 'class', extant: true, size: 8 },
+      { id: 'gnetopsida', name: 'Gnetopsida', nameZh: '买麻藤纲', rank: 'class', extant: true, size: 3 },
+      { id: 'bennettitales', name: 'Bennettitales', nameZh: '本内苏铁目', rank: 'order', extant: false, extinctInEvent: EX.KPG, size: 5, description: '中生代常见裸子植物，外形似苏铁但不相关。' },
+      { id: 'cordaitales', name: 'Cordaitales', nameZh: '科达目', rank: 'order', extant: false, extinctInEvent: EX.PER, size: 5, description: '石炭纪-二叠纪的高大乔木，针叶树的先驱。' },
+    ]},
+
+    /* ── 被子植物 ── */
+    { id: 'angiospermae', name: 'Angiospermae', nameZh: '被子植物（开花植物）', rank: 'phylum', extant: true, size: 10, description: '白垩纪开始迅速多样化，如今占陆生植物 90% 以上。', children: [
+      { id: 'magnoliids', name: 'Magnoliidae', nameZh: '木兰类', rank: 'class', extant: true, size: 5 },
+      { id: 'monocots', name: 'Monocotyledoneae', nameZh: '单子叶植物', rank: 'class', extant: true, size: 9, description: '禾本科（草）、棕榈、兰花等。' },
+      { id: 'eudicots', name: 'Eudicotyledoneae', nameZh: '真双子叶植物', rank: 'class', extant: true, size: 10, description: '最大的被子植物类群：蔷薇、豆、菊、壳斗等。' },
+      { id: 'nymphaeales', name: 'Nymphaeales', nameZh: '睡莲目', rank: 'order', extant: true, size: 3, description: '基部被子植物，保留原始花部特征。' },
+    ]},
+  ],
+}
+
+/* ══════════════════════════════════════════════════
    节点状态推导
    ══════════════════════════════════════════════════ */
 

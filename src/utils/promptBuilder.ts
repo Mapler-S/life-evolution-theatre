@@ -317,6 +317,91 @@ const TAXON_TRAITS: Record<string, TaxonTraits> = {
     scale: '2–40 cm animal, elements 0.2–2 mm, with dual scale bars',
     signature: 'complete P-M-S element apparatus reconstruction diagram, the "golden spike" biostratigraphy role noted',
   },
+
+  /* ══════════════════════════════════════════════════
+     植物界
+     ══════════════════════════════════════════════════ */
+
+  Lepidodendrales: {
+    morphology: 'towering tree-like lycopsid up to 40 m, unbranched trunk crowned with dichotomous canopy, rhizomorphic root system (Stigmaria)',
+    texture: 'diamond-shaped leaf cushion scars (lepidodendrid pattern) covering entire trunk surface, peeling bark texture',
+    palette: 'deep forest green crown, grey-brown trunk with geometric scar pattern, dark swamp water reflections',
+    habitat: 'Carboniferous coal swamp forest, standing water with fallen logs and giant dragonflies (Meganeura)',
+    scale: '30–40 m height, shown with human silhouette, 10 cm scale bar for bark detail',
+    signature: 'leaf cushion scar pattern close-up as botanical inset, Stigmaria root system diagram',
+  },
+  Glossopteridales: {
+    morphology: 'deciduous tree with tongue-shaped leaves (Glossopteris), net-veined with prominent midrib, reproductive structures on leaf surface',
+    texture: 'broad leaves with reticulate venation, woody trunk with growth rings indicating seasonality',
+    palette: 'autumn amber-gold foliage against grey Permian sky, brown woody tones',
+    habitat: 'Gondwanan cool temperate forest, seasonal leaf litter, understory ferns',
+    scale: '5–10 m tree, leaf 10–30 cm, with 5 cm scale bar for leaf',
+    signature: 'venation pattern diagram and Gondwana continental distribution map as dual insets',
+  },
+  Calamitaceae: {
+    morphology: 'giant horsetail up to 20 m, jointed segmented stem with whorls of branches and leaves at each node, terminal strobilus cone',
+    texture: 'ribbed stem with longitudinal ridges, smooth internodes, leaf whorls at regular intervals',
+    palette: 'bright green whorled branches, pale grey-green ribbed stem, dark coal swamp backdrop',
+    habitat: 'Carboniferous waterside forest margin, growing alongside lepidodendrids and seed ferns',
+    scale: '10–20 m height, stem 20–30 cm diameter, with 5 cm scale bar',
+    signature: 'cross-section of jointed stem showing vascular anatomy, strobilus detail as inset',
+  },
+  Bennettitales: {
+    morphology: 'cycad-like habit with stout trunk and crown of pinnate fronds, flower-like reproductive structures (bisexual strobili)',
+    texture: 'persistent leaf bases armoring trunk, pinnate fronds with thick cuticle',
+    palette: 'dark green leathery fronds, brown fibrous trunk, cream-colored flower-like strobili',
+    habitat: 'Mesozoic open woodland with conifers and ferns, warm subtropical light',
+    scale: '1–5 m height, with 10 cm scale bar',
+    signature: 'flower-like strobilus reconstruction vs modern cycad comparison as inset',
+  },
+  Cordaitales: {
+    morphology: 'tall tree up to 30 m with strap-shaped leaves up to 1 m long, dense wood with pith, pollen and seed cones on branches',
+    texture: 'long parallel-veined strap leaves, dense secondary wood with visible growth rings',
+    palette: 'deep green elongated foliage, reddish-brown bark, golden pollen cones',
+    habitat: 'Late Carboniferous upland forest, drier ground above swamp level',
+    scale: '20–30 m height, leaf 50–100 cm, with 10 cm scale bar',
+    signature: 'pith cast (Artisia) cross-section and leaf venation as botanical insets',
+  },
+  Cycadopsida: {
+    morphology: 'palm-like habit with stout columnar trunk, crown of large pinnately compound fronds, large seed cones (dioecious)',
+    texture: 'rough trunk covered in persistent leaf bases, glossy thick fronds with revolute margins',
+    palette: 'rich dark green glossy fronds, brown-orange trunk, bright orange-red seed cones',
+    habitat: 'tropical understory in dappled light, with fern ground cover',
+    scale: '1–6 m height, frond 1–2 m, with 10 cm scale bar',
+    signature: 'seed cone cross-section showing ovules, and frond pinnule stomata as SEM inset',
+  },
+  Ginkgoopsida: {
+    morphology: 'deciduous tree with fan-shaped bilobed leaves, dichotomous open venation, fleshy seeds on long stalks (dioecious)',
+    texture: 'fan-shaped leaves with delicate parallel-dichotomous veins, smooth grey bark',
+    palette: 'brilliant golden-yellow autumn foliage, pale green summer leaves, silver-grey bark',
+    habitat: 'temperate forest clearing, autumn scene with golden leaf carpet beneath the tree',
+    scale: '15–30 m mature tree, leaf 5–10 cm, with 2 cm scale bar for leaf',
+    signature: 'leaf venation diagram showing open dichotomous pattern, "living fossil" timeline strip',
+  },
+  Pinopsida: {
+    morphology: 'evergreen conifer with needle or scale leaves, woody seed cones with spiral phyllotaxis, resin canals in wood',
+    texture: 'scaly or furrowed bark, needle clusters or scale-leaf sprays, woody cone with thick scales',
+    palette: 'deep blue-green needles, warm brown bark, amber resin drops',
+    habitat: 'montane boreal forest, misty morning light through canopy',
+    scale: '10–50 m height, cone 5–20 cm, with 2 cm scale bar for cone',
+    signature: 'wood cross-section showing tracheids and resin canal, cone scale with seeds as inset',
+  },
+  Angiospermae: {
+    morphology: 'flowering plant with enclosed ovules in carpel, double fertilization, diverse growth forms from herbs to trees',
+    texture: 'varied — broad reticulate-veined leaves, showy petals with nectar guides, fruit walls with diverse textures',
+    palette: 'vivid flower colors — magenta, white, yellow — lush green foliage, ripe fruit reds and purples',
+    habitat: 'diverse Cenozoic landscape showing grassland, forest margin, and aquatic habitats',
+    scale: 'varies enormously, shown with appropriate scale bar',
+    signature: 'flower diagram showing carpel, stamen, and double fertilization as botanical cross-section inset',
+  },
+  Polypodiopsida: {
+    morphology: 'fronds with pinnately compound blades, circinate vernation (fiddlehead), sori on underside bearing sporangia',
+    texture: 'delicate pinnae with visible venation, fiddle-shaped croziers, sporangia clusters with indusium',
+    palette: 'lush green fronds, brown stipe and rachis, golden-brown sori, dark forest floor',
+    habitat: 'humid tropical forest understory, growing on mossy logs and stream banks',
+    scale: 'frond 30–200 cm, with 2 cm scale bar',
+    signature: 'sorus cross-section showing sporangia and annulus, fiddlehead unfurling sequence as inset',
+  },
 }
 
 /* 默认兜底特征 */

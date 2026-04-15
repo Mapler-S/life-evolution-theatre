@@ -183,6 +183,7 @@ export default function GeoMap() {
           <div className="gm-overlay gm-overlay--load">
             <div className="gm-spin"/>
             <p>正在检索 PBDB 化石记录…</p>
+            <p className="gm-sm">{taxonName}</p>
           </div>
         )}
         {error && (

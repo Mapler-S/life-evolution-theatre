@@ -1,13 +1,27 @@
 /* ── 容器 ── */
 .pt-box { position: relative; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; overflow: hidden; }
+.pt-box--shake { animation: pt-shake 0.5s ease-out; }
+@keyframes pt-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 1px); }
+  20% { transform: translate(3px, -1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  50% { transform: translate(-3px, 0); }
+  60% { transform: translate(1px, 1px); }
+  70% { transform: translate(-1px, -1px); }
+  80% { transform: translate(2px, 0); }
+  90% { transform: translate(0, 1px); }
+}
 .pt-svg  { max-width: 100%; max-height: 100%; }
 
 /* ── 连接线 ── */
 .pt-link { pointer-events: none; }
 
 /* ── 节点 ── */
-.pt-node { cursor: pointer; }
-.pt-node:hover circle { filter: drop-shadow(0 0 6px rgba(30,58,95,0.3)); }
+.pt-node { cursor: pointer; transition: transform var(--transition-fast); }
+.pt-node:hover circle { filter: drop-shadow(0 0 8px rgba(30,58,95,0.35)); }
+.pt-node:active { transform: scale(0.95); }
 
 /* ── 标签 ── */
 .pt-lbl { font-family: var(--font-ui); font-size: 10px; fill: var(--color-text-secondary); pointer-events: none; }
@@ -18,6 +32,24 @@
 
 /* ── 中心 ── */
 .pt-center { font-family: var(--font-display); font-size: 14px; font-weight: 500; fill: var(--color-accent-primary); }
+
+/* ── 界切换 ── */
+.pt-kingdom {
+  position: absolute; top: var(--spacing-md); right: var(--spacing-md); z-index: 10;
+  display: flex; border: 1px solid var(--color-border-strong); border-radius: 3px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.pt-kingdom-btn {
+  padding: 4px 12px; font-family: var(--font-ui); font-size: 0.74rem; font-weight: 500;
+  background: var(--color-bg-panel); border: none; color: var(--color-text-muted);
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.pt-kingdom-btn + .pt-kingdom-btn { border-left: 1px solid var(--color-border-strong); }
+.pt-kingdom-btn:hover { background: var(--color-bg-inset); color: var(--color-text-primary); }
+.pt-kingdom-btn--on {
+  background: var(--color-accent-primary); color: #f6f1e6;
+}
+.pt-kingdom-btn--on:hover { background: var(--color-accent-primary-soft); color: #f6f1e6; }
 
 /* ── 返回按钮 ── */
 .pt-back {
@@ -61,3 +93,52 @@
 .pt-tip-st--dying-now    { color: #ef5350; }
 .pt-tip-st--dead-earlier,
 .pt-tip-st--dead         { color: rgba(246,241,230,0.4); }
+
+/* ── 选中信息卡片 ── */
+.pt-info {
+  position: absolute; bottom: var(--spacing-md); right: var(--spacing-md);
+  z-index: 10; max-width: 260px;
+  padding: 12px 16px;
+  background: rgba(28,25,23,0.92); backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,154,59,0.3); border-radius: 4px;
+  box-shadow: var(--shadow-lg); color: #f6f1e6;
+}
+.pt-info::before {
+  content: ''; position: absolute; left: -1px; top: 10px; bottom: 10px; width: 2px;
+  background: var(--color-extinction); opacity: 0.8;
+}
+.pt-info-close {
+  position: absolute; top: 6px; right: 6px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  padding: 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%; color: rgba(246,241,230,0.6); font-size: 13px; line-height: 1;
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.pt-info-close:hover { background: rgba(255,255,255,0.15); color: #f6f1e6; }
+.pt-info-badge {
+  display: inline-block; padding: 1px 8px; margin-bottom: 6px;
+  background: rgba(139,38,53,0.25); border: 1px solid rgba(139,38,53,0.4);
+  border-radius: 10px; font-family: var(--font-data); font-size: 0.68rem;
+  font-weight: 600; color: #ef5350; letter-spacing: 0.04em;
+}
+.pt-info-name {
+  font-family: var(--font-display); font-size: 1rem; font-weight: 500;
+  color: var(--color-accent-gold); margin-bottom: 2px;
+}
+.pt-info-time {
+  font-family: var(--font-data); font-size: 0.72rem; letter-spacing: 0.06em;
+  color: rgba(246,241,230,0.5); margin-bottom: 6px;
+}
+.pt-info-desc {
+  font-size: 0.78rem; line-height: 1.55; color: rgba(246,241,230,0.75);
+  margin-bottom: 8px;
+}
+.pt-info-taxa {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.pt-info-tag {
+  padding: 1px 7px; font-family: var(--font-data); font-size: 0.66rem;
+  font-style: italic; letter-spacing: 0.03em;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2px; color: rgba(246,241,230,0.6);
+}

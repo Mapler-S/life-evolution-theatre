@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PHYLO_SEED, nodeStatus, type NodeStatus, type PhyloTreeNode } from '../../utils/phyloSeed'
+import { PHYLO_SEED, PHYLO_SEED_PLANTAE, nodeStatus, type NodeStatus, type PhyloTreeNode } from '../../utils/phyloSeed'
 import { useExploreStore } from '../../stores/useExploreStore'
 import './PhyloTree.css'
 
@@ -34,12 +34,25 @@ export default function PhyloTree() {
   const [tip, setTip]       = useState<Tip | null>(null)
   const [hovId, setHovId]   = useState<string | null>(null)
   const [drill, setDrill]   = useState<PhyloTreeNode | null>(null)
+  const [kingdom, setKingdom] = useState<'animalia' | 'plantae'>('animalia')
   const cRef = useRef<HTMLDivElement>(null)
 
   const selExt = useExploreStore(s => s.selectedExtinction)
   const setTax = useExploreStore(s => s.setSelectedTaxon)
+  const [shaking, setShaking] = useState(false)
+  const [infoDismissed, setInfoDismissed] = useState(false)
 
-  const data = drill ?? PHYLO_SEED
+  /* 选中灭绝事件时震动 + 重新显示信息卡片 */
+  useEffect(() => {
+    if (!selExt) return
+    setShaking(true)
+    setInfoDismissed(false)
+    const t = setTimeout(() => setShaking(false), 550)
+    return () => clearTimeout(t)
+  }, [selExt])
+
+  const seedTree = kingdom === 'animalia' ? PHYLO_SEED : PHYLO_SEED_PLANTAE
+  const data = drill ?? seedTree
 
   /* ── 布局 ── */
   const root = useMemo(() =>
@@ -85,7 +98,21 @@ export default function PhyloTree() {
   const ry = (a: number, r: number) => r * Math.sin(a - Math.PI / 2)
 
   return (
-    <div ref={cRef} className="pt-box">
+    <div ref={cRef} className={`pt-box${shaking ? ' pt-box--shake' : ''}`}>
+      {/* 界切换 */}
+      <div className="pt-kingdom">
+        <button
+          className={`pt-kingdom-btn${kingdom === 'animalia' ? ' pt-kingdom-btn--on' : ''}`}
+          onClick={() => { setKingdom('animalia'); setDrill(null) }}>
+          动物界
+        </button>
+        <button
+          className={`pt-kingdom-btn${kingdom === 'plantae' ? ' pt-kingdom-btn--on' : ''}`}
+          onClick={() => { setKingdom('plantae'); setDrill(null) }}>
+          植物界
+        </button>
+      </div>
+
       {drill && <button className="pt-back" onClick={() => setDrill(null)}>← 返回全树</button>}
 
       <svg width={SZ} height={SZ} viewBox={`0 0 ${SZ} ${SZ}`} className="pt-svg">
@@ -165,6 +192,27 @@ export default function PhyloTree() {
           <text textAnchor="middle" dy="0.35em" className="pt-center">{data.nameZh}</text>
         </g>
       </svg>
+
+      {/* 选中信息卡片 */}
+      <AnimatePresence>
+        {selExt && !infoDismissed && (
+          <motion.div className="pt-info"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.25 }}>
+            <button className="pt-info-close" onClick={() => setInfoDismissed(true)}
+              title="关闭" aria-label="关闭信息面板">×</button>
+            <div className="pt-info-badge">{Math.round(selExt.severity * 100)}% 属级灭绝</div>
+            <div className="pt-info-name">{selExt.nameZh}</div>
+            <div className="pt-info-time">{selExt.name} · {selExt.ma} Ma</div>
+            <div className="pt-info-desc">{selExt.description}</div>
+            <div className="pt-info-taxa">
+              {selExt.affectedTaxa.slice(0, 4).map(t => (
+                <span key={t} className="pt-info-tag">{t}</span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 图例 */}
       {selExt && (

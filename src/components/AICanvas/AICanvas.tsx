@@ -202,6 +202,24 @@ export default function AICanvas() {
 
       {error && <div className="ai-err">{error.message}</div>}
 
+      {/* 生成中粒子遮罩 */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div className="ai-gen-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}>
+            <div className="ai-gen-ring">
+              <div className="ai-gen-ring-core"/>
+            </div>
+            <div className="ai-gen-particles">
+              {Array.from({ length: 8 }, (_, i) => <div key={i} className="ai-gen-p"/>)}
+            </div>
+            <div className="ai-gen-label">正在生成复原画像…</div>
+            <div className="ai-gen-hint">通常需要 10–30 秒</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 画廊 */}
       <div className="ai-gallery-hd">
         <span>已生成 <b>{gallery.length}</b></span>

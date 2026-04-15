@@ -5,8 +5,11 @@
   padding: var(--spacing-sm) 0 var(--spacing-xs);
   background: linear-gradient(to bottom, var(--color-bg-secondary), var(--color-bg-primary));
   user-select: none;
+  border-top: 1px solid transparent;
+  transition: border-color var(--transition-fast);
 }
-.tl-svg { display: block; width: 100%; }
+.tl-container:hover { border-top-color: var(--color-border); }
+.tl-svg { display: block; width: 100%; cursor: crosshair; }
 
 /* ── 多样性曲线 ── */
 .tl-curve { filter: drop-shadow(0 2px 4px rgba(30,58,95,0.15)); }
