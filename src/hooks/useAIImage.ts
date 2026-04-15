@@ -52,7 +52,7 @@ async function generateStability({
   form.append('aspect_ratio', '16:9')
 
   const response = await fetch(
-    'https://api.stability.ai/v2beta/stable-image/generate/core',
+    '/api/stability/v2beta/stable-image/generate/core',
     {
       method: 'POST',
       signal,
@@ -76,7 +76,7 @@ async function generateDalle({
   apiKey,
   signal,
 }: GenerateArgs): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/images/generations', {
+  const response = await fetch('/api/openai/v1/images/generations', {
     method: 'POST',
     signal,
     headers: {
@@ -107,7 +107,7 @@ async function generateReplicate({
   apiKey,
   signal,
 }: GenerateArgs): Promise<string> {
-  const create = await fetch('https://api.replicate.com/v1/predictions', {
+  const create = await fetch('/api/replicate/v1/predictions', {
     method: 'POST',
     signal,
     headers: {
@@ -142,7 +142,8 @@ async function generateReplicate({
   // 否则轮询至多 60 次（~1 分钟）
   for (let i = 0; i < 60; i++) {
     await delay(1000, signal)
-    const poll = await fetch(prediction.urls.get, {
+    const pollUrl = prediction.urls.get.replace('https://api.replicate.com', '/api/replicate')
+    const poll = await fetch(pollUrl, {
       signal,
       headers: { Authorization: `Token ${apiKey}` },
     })
