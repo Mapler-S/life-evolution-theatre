@@ -78,6 +78,22 @@
 .ai-prompt::placeholder { color: var(--color-text-faint); font-style: italic; }
 .ai-prompt:focus { border-color: var(--color-accent-primary); }
 
+/* ── Prompt 预览 ── */
+.ai-preview {
+  margin: -4px 0 var(--spacing-sm); font-family: var(--font-data); font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+.ai-preview summary {
+  cursor: pointer; user-select: none; letter-spacing: 0.04em;
+  color: var(--color-text-faint); transition: color var(--transition-fast);
+}
+.ai-preview summary:hover { color: var(--color-accent-primary); }
+.ai-preview p {
+  margin-top: 4px; padding: 6px 8px; line-height: 1.45;
+  background: var(--color-bg-inset); border: 1px solid var(--color-border);
+  border-radius: 2px; word-break: break-word; max-height: 100px; overflow-y: auto;
+}
+
 /* ── 风格选择 ── */
 .ai-styles { display: flex; gap: 4px; margin-bottom: var(--spacing-sm); flex-wrap: wrap; }
 .ai-style-btn {

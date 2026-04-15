@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useAIImage } from '../../hooks/useAIImage'
+import { useAIImage, composePrompt } from '../../hooks/useAIImage'
 import { useExploreStore } from '../../stores/useExploreStore'
 import {
   buildDefaultPrompt,
@@ -41,26 +41,27 @@ export default function AICanvas() {
   const { generateImage, loading, error } = useAIImage()
 
   const [style, setStyle]       = useState<AIImageStyle>('scientific')
-  const [prompt, setPrompt]     = useState('')
-  const [dirty, setDirty]       = useState(false)    // prompt 是否被手动修改过
+  const [basePrompt, setBasePrompt] = useState('')
   const [settingsOpen, setSO]   = useState(false)
   const [lightbox, setLightbox] = useState<AIImageResult | null>(null)
 
-  /* 上下文变化时，若 prompt 未被用户改动，就同步到建议值 */
-  const suggestion = useMemo(() => buildDefaultPrompt(selExt, selTax), [selExt, selTax])
-
-  /* 选择上下文（灭绝事件/分类群）变化时，重置 dirty 并同步建议 prompt */
-  useEffect(() => {
-    setDirty(false)
-  }, [selExt, selTax])
+  /* 用原始值做依赖，保证上下文切换时 effect 必触发 */
+  const taxId = selTax?.oid ?? ''
+  const extId = selExt?.id ?? ''
 
   useEffect(() => {
-    if (!dirty) {
-      setPrompt(suggestion.prompt)
-      if (suggestion.scene === 'diptych') setStyle('diptych')
-      else if (suggestion.scene === 'taxon') setStyle('scientific')
-    }
-  }, [dirty, suggestion.prompt, suggestion.scene])
+    const s = buildDefaultPrompt(selExt, selTax)
+    setBasePrompt(s.prompt)
+    if (s.scene === 'diptych') setStyle('diptych')
+    else if (s.scene === 'taxon') setStyle('scientific')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxId, extId])
+
+  /* 最终发送给 API 的完整 prompt（base + 风格尾缀），用户可实时预览 */
+  const finalPrompt = useMemo(
+    () => basePrompt ? composePrompt(basePrompt, style) : '',
+    [basePrompt, style],
+  )
 
   /* Esc 关闭灯箱 */
   useEffect(() => {
@@ -72,9 +73,9 @@ export default function AICanvas() {
 
   /* ── 生成 ── */
   async function onGenerate() {
-    if (!prompt.trim()) return
+    if (!basePrompt.trim()) return
     try {
-      const result = await generateImage(prompt, style)
+      const result = await generateImage(basePrompt, style)
       const tags: string[] = []
       if (selExt) tags.push(selExt.nameZh)
       if (selTax) tags.push(selTax.nam)
@@ -87,15 +88,13 @@ export default function AICanvas() {
   /* 快捷填充：按场景重置 prompt */
   function fillScene(scene: 'taxon' | 'diptych') {
     if (scene === 'diptych' && selExt) {
-      setPrompt(buildExtinctionDiptychPrompt(selExt))
+      setBasePrompt(buildExtinctionDiptychPrompt(selExt))
       setStyle('diptych')
-      setDirty(false)
     } else if (scene === 'taxon' && selTax) {
-      setPrompt(buildTaxonPrompt({
+      setBasePrompt(buildTaxonPrompt({
         taxonName: selTax.nam.replace(/\s*\([^)]*\)/g, '').trim(),
       }))
       setStyle('scientific')
-      setDirty(false)
     }
   }
 
@@ -164,10 +163,18 @@ export default function AICanvas() {
 
       {/* Prompt 编辑 */}
       <textarea className="ai-prompt"
-        value={prompt}
-        onChange={e => { setPrompt(e.target.value); setDirty(true) }}
+        value={basePrompt}
+        onChange={e => setBasePrompt(e.target.value)}
         placeholder="用英文描述希望生成的画面；留空则按选中上下文自动生成"
         rows={3}/>
+
+      {/* 实际发送 prompt 预览（含风格后缀） */}
+      {finalPrompt && (
+        <details className="ai-preview">
+          <summary>预览完整 prompt（含风格后缀）</summary>
+          <p>{finalPrompt}</p>
+        </details>
+      )}
 
       {/* 风格选择 */}
       <div className="ai-styles">
@@ -182,7 +189,7 @@ export default function AICanvas() {
 
       {/* 生成按钮 + 状态 */}
       <div className="ai-actions">
-        <button className="ai-go" disabled={loading || !prompt.trim() || !apiKey}
+        <button className="ai-go" disabled={loading || !basePrompt.trim() || !apiKey}
           onClick={onGenerate}>
           {loading ? (<><span className="ai-go-spin"/>生成中…</>) : '生成画像'}
         </button>

@@ -17,13 +17,13 @@ import type { AIImageResult, AIImageStyle, AIProvider } from '../types'
 
 const STYLE_SUFFIXES: Record<AIImageStyle, string> = {
   scientific:
-    'scientific paleontological illustration, museum-quality rendering, detailed anatomy, no text labels',
+    'rendered as a premium museum scientific plate: hyper-detailed anatomy, fine ink leader-line annotations pointing to key features, parchment-tone border with elegant serif specimen label, inspired by Ernst Haeckel Kunstformen and modern paleoart of Julius Csotonyi, 8K resolution, extreme detail',
   cinematic:
-    'cinematic paleoart, dramatic lighting, National Geographic quality, photorealistic',
+    'rendered as cinematic paleoart: dramatic volumetric god-ray lighting, atmospheric haze, ultra-wide anamorphic lens feel, depth-of-field bokeh, National Geographic cover quality, photorealistic skin and feather textures, subtle film grain, 8K resolution',
   diorama:
-    'natural history diorama, soft lighting, subtle fog, wide ecosystem view',
+    'rendered as a natural history museum diorama scene: soft diffused gallery lighting with warm spotlights, slight tilt-shift miniature effect, painted cyclorama background blending into foreground, realistic scale models with visible brushstroke texture on backdrop, dust motes in light beams',
   diptych:
-    'diptych comparison illustration, side-by-side composition, dramatic contrast',
+    'rendered as a grand diptych comparison plate: split composition with dramatic contrast between panels, unified by a geological boundary marker, museum-quality detail in both halves, chiaroscuro lighting, gold-leaf style dividing line, monumental and emotionally resonant',
 }
 
 export function composePrompt(base: string, style: AIImageStyle): string {
