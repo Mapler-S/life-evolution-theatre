@@ -84,10 +84,20 @@ export interface Occurrence {
   idn?: string
   /** 标准化分类名 */
   tna?: string
-  /** 经度 */
+  /** 经度（现代） */
   lng: number
-  /** 纬度 */
+  /** 纬度（现代） */
   lat: number
+  /** 古经度（paleoloc） */
+  paleolng?: number
+  /** 古纬度（paleoloc） */
+  paleolat?: number
+  /** 门 */
+  phl?: string
+  /** 纲 */
+  cll?: string
+  /** 目 */
+  odl?: string
   /** 早期时期 */
   oei?: string
   /** 晚期时期 */

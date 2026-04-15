@@ -91,21 +91,90 @@ export function buildTaxaTree(flat: TaxonNode[]): TaxonNode[] {
 
 /**
  * 获取化石出现记录，包含古地理坐标
- * 例：fetchOccurrences('Dinosauria', 'Cretaceous')
+ * 例：fetchOccurrences('Dinosauria', { interval: 'Cretaceous' })
  */
+export interface OccurrencesQuery {
+  /** 命名时期，如 "Cretaceous" */
+  interval?: string
+  /** 时间范围上界（Ma，较老） */
+  max_ma?: number
+  /** 时间范围下界（Ma，较新） */
+  min_ma?: number
+  /** 返回条数上限 */
+  limit?: number
+}
+
+/** PBDB 紧凑词汇表（默认）的原始响应字段 */
+interface PBDBOccurrenceRaw {
+  oid: string
+  cid?: string
+  idn?: string
+  tna?: string
+  /** 注意：PBDB 紧凑词汇返回的 lng/lat 是字符串 */
+  lng?: string | number
+  lat?: string | number
+  /** paleoloc show 对应的字段：pln=paleolng, pla=paleolat */
+  pln?: number
+  pla?: number
+  phl?: string
+  cll?: string
+  odl?: string
+  oei?: string
+  oli?: string
+  eag?: number
+  lag?: number
+}
+
+function toNum(v: unknown): number | undefined {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
+  if (typeof v === 'string' && v.length) {
+    const n = Number.parseFloat(v)
+    return Number.isFinite(n) ? n : undefined
+  }
+  return undefined
+}
+
 export async function fetchOccurrences(
   taxon: string,
-  interval?: string,
+  query: OccurrencesQuery = {},
   signal?: AbortSignal,
 ): Promise<Occurrence[]> {
   const url = new URL(`${PBDB_BASE}/occs/list.json`)
   url.searchParams.set('base_name', taxon)
-  url.searchParams.set('show', 'coords,phylo,time')
-  if (interval) url.searchParams.set('interval', interval)
-  const res = await fetchJson<PBDBResponse<Occurrence>>(url.toString(), {
+  url.searchParams.set('show', 'coords,phylo,time,paleoloc')
+  if (query.interval) url.searchParams.set('interval', query.interval)
+  if (typeof query.max_ma === 'number')
+    url.searchParams.set('max_ma', String(query.max_ma))
+  if (typeof query.min_ma === 'number')
+    url.searchParams.set('min_ma', String(query.min_ma))
+  url.searchParams.set('limit', String(query.limit ?? 500))
+  const res = await fetchJson<PBDBResponse<PBDBOccurrenceRaw>>(url.toString(), {
     signal,
   })
-  return res.records
+  // 规范化：lng/lat 字符串 → number，pln/pla → paleolng/paleolat
+  const out: Occurrence[] = []
+  for (const r of res.records) {
+    const lng = toNum(r.lng)
+    const lat = toNum(r.lat)
+    if (lng === undefined || lat === undefined) continue
+    out.push({
+      oid: r.oid,
+      cid: r.cid,
+      idn: r.idn,
+      tna: r.tna,
+      lng, lat,
+      paleolng: toNum(r.pln),
+      paleolat: toNum(r.pla),
+      phl: r.phl,
+      cll: r.cll,
+      odl: r.odl,
+      oei: r.oei,
+      oli: r.oli,
+      eag: r.eag,
+      lag: r.lag,
+    })
+  }
+  return out
 }
 
 // ============================================================
@@ -196,9 +265,9 @@ export function useTaxaTree(
 
 export function useOccurrences(
   taxon: string,
-  interval?: string,
+  query: OccurrencesQuery = {},
 ): AsyncResult<Occurrence[]> {
-  return useAsync(fetchOccurrences, [taxon, interval] as const, !!taxon)
+  return useAsync(fetchOccurrences, [taxon, query] as const, !!taxon)
 }
 
 export function useTimeIntervals(

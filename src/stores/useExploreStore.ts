@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type {
+  AIImageResult,
   AIProvider,
   ExtinctionEvent,
   GeoInterval,
@@ -19,6 +20,9 @@ import type {
  * - 瞬时交互状态（hoveredItem、selectedTaxon 等）保留在内存
  */
 
+/** AI 画廊上限 —— 控制 localStorage 体积 */
+const GALLERY_LIMIT = 40
+
 interface ExploreState {
   // —— 数据选择 ——
   currentInterval: GeoInterval | null
@@ -36,6 +40,9 @@ interface ExploreState {
   aiApiKey: string
   aiProvider: AIProvider
 
+  // —— AI 画廊 ——
+  gallery: AIImageResult[]
+
   // —— Setters ——
   setCurrentInterval: (interval: GeoInterval | null) => void
   setSelectedTaxon: (taxon: TaxonNode | null) => void
@@ -45,6 +52,9 @@ interface ExploreState {
   setViewMode: (mode: ViewMode) => void
   setAiApiKey: (key: string) => void
   setAiProvider: (provider: AIProvider) => void
+  addGalleryImage: (img: AIImageResult) => void
+  removeGalleryImage: (id: string) => void
+  clearGallery: () => void
   resetSelection: () => void
 }
 
@@ -61,6 +71,7 @@ export const useExploreStore = create<ExploreState>()(
       viewMode: 'explore',
       aiApiKey: '',
       aiProvider: 'stability',
+      gallery: [],
 
       setCurrentInterval: (interval) => set({ currentInterval: interval }),
       setSelectedTaxon: (taxon) => set({ selectedTaxon: taxon }),
@@ -70,6 +81,14 @@ export const useExploreStore = create<ExploreState>()(
       setViewMode: (mode) => set({ viewMode: mode }),
       setAiApiKey: (key) => set({ aiApiKey: key }),
       setAiProvider: (provider) => set({ aiProvider: provider }),
+      addGalleryImage: (img) =>
+        set((s) => ({
+          // 新图放最前面，超限时截断（避免 localStorage 膨胀）
+          gallery: [img, ...s.gallery].slice(0, GALLERY_LIMIT),
+        })),
+      removeGalleryImage: (id) =>
+        set((s) => ({ gallery: s.gallery.filter((g) => g.id !== id) })),
+      clearGallery: () => set({ gallery: [] }),
       resetSelection: () =>
         set({
           currentInterval: null,
@@ -81,11 +100,12 @@ export const useExploreStore = create<ExploreState>()(
     {
       name: 'life-evolution-theatre/explore',
       storage: createJSONStorage(() => localStorage),
-      // 仅持久化用户设置，不持久化瞬时交互状态
+      // 仅持久化用户设置与画廊；瞬时交互状态不落盘
       partialize: (state) => ({
         viewMode: state.viewMode,
         aiApiKey: state.aiApiKey,
         aiProvider: state.aiProvider,
+        gallery: state.gallery,
       }),
     },
   ),

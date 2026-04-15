@@ -68,7 +68,9 @@ export async function fetchJson<T>(
 
   if (useCache) {
     inflight.set(url, request)
-    request.finally(() => inflight.delete(url))
+    // 吞掉 finally 链上的 rejection，避免调用方 abort 后产生
+    // "uncaught in promise AbortError"（finally 会继承原 Promise 的 rejection）
+    request.finally(() => inflight.delete(url)).catch(() => {})
   }
 
   return request

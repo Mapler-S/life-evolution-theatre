@@ -1,73 +1,87 @@
-/* CSS 变量 — 设计系统 */
+/* ============================================================
+   设计系统 — 博物馆档案美学
+   灵感：古生物学专著 · ICS 地层图 · 自然历史博物馆展签
+   ============================================================ */
+
 :root {
-  /* 暗色主题 — 深空背景感 */
-  --color-bg-primary: #0a0e1a;
-  --color-bg-secondary: #0f1629;
-  --color-bg-panel: #141c35;
-  --color-bg-card: #1a2340;
+  /* ---- 表面：暖色档案纸 ---- */
+  --color-bg-primary:   #f6f1e6;
+  --color-bg-secondary: #fbf7ee;
+  --color-bg-panel:     #ffffff;
+  --color-bg-card:      #ece5d4;
+  --color-bg-inset:     #f0e9d8;
 
-  /* 文字 */
-  --color-text-primary: #e8eaf6;
-  --color-text-secondary: #9fa8da;
-  --color-text-muted: #5c6bc0;
+  /* ---- 墨色文字 ---- */
+  --color-text-primary:   #1c1917;
+  --color-text-secondary: #44403c;
+  --color-text-muted:     #857e73;
+  --color-text-faint:     #b8b0a3;
 
-  /* 强调色 */
-  --color-accent-blue: #3d5afe;
-  --color-accent-cyan: #00e5ff;
-  --color-accent-green: #69f0ae;
-  --color-accent-red: #ff1744;
-  --color-accent-amber: #ffab40;
+  /* ---- 强调色 ---- */
+  --color-accent-primary:      #1e3a5f;
+  --color-accent-primary-soft: #3d5a80;
+  --color-accent-warm:         #b07a3a;
+  --color-accent-gold:         #c99a3b;
+  --color-accent-green:        #5a7a3a;
 
-  /* 灭绝事件色 */
-  --color-extinction: #ff1744;
-  --color-extinction-glow: rgba(255, 23, 68, 0.4);
+  /* ---- 灭绝色 ---- */
+  --color-extinction:      #8b2635;
+  --color-extinction-soft: #b34150;
+  --color-extinction-glow: rgba(139, 38, 53, 0.28);
 
-  /* 字体 */
-  --font-display: 'Georgia', 'Times New Roman', serif;
-  --font-data: 'Courier New', 'Consolas', monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* 向后兼容别名 */
+  --color-accent-blue:  var(--color-accent-primary);
+  --color-accent-cyan:  var(--color-accent-primary);
+  --color-accent-amber: var(--color-accent-gold);
+  --color-accent-red:   var(--color-extinction);
 
-  /* 间距 */
+  /* ---- 边框 ---- */
+  --color-border:        rgba(28, 25, 23, 0.08);
+  --color-border-strong: rgba(28, 25, 23, 0.16);
+
+  /* ---- 字体 ---- */
+  --font-display: ui-serif, Georgia, 'Songti SC', 'STSong', serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---- 间距 ---- */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 48px;
 
-  /* 动效 */
+  /* ---- 动效 ---- */
   --transition-fast: 150ms ease-out;
-  --transition-base: 300ms ease-out;
-  --transition-slow: 600ms ease-out;
+  --transition-base: 300ms cubic-bezier(0.2, 0, 0.2, 1);
+  --transition-slow: 600ms cubic-bezier(0.2, 0, 0.2, 1);
 
-  /* 发光效果 */
-  --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.3);
-  --glow-green: 0 0 20px rgba(105, 240, 174, 0.3);
-  --glow-red: 0 0 20px rgba(255, 23, 68, 0.5);
+  /* ---- 阴影 ---- */
+  --shadow-xs:  0 1px 2px  rgba(28, 25, 23, 0.04);
+  --shadow-sm:  0 2px 6px  rgba(28, 25, 23, 0.06);
+  --shadow-md:  0 6px 20px rgba(28, 25, 23, 0.08);
+  --shadow-lg:  0 16px 40px rgba(28, 25, 23, 0.10);
+
+  /* 旧别名 */
+  --glow-cyan:  0 0 14px rgba(30, 58, 95, 0.18);
+  --glow-green: 0 0 18px rgba(90, 122, 58, 0.22);
+  --glow-red:   0 0 22px rgba(139, 38, 53, 0.22);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
 
 body {
   background-color: var(--color-bg-primary);
+  background-image:
+    radial-gradient(ellipse at top, rgba(201,154,59,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(30,58,95,0.04) 0%, transparent 60%);
   color: var(--color-text-primary);
   font-family: var(--font-ui);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-#root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+#root { height: 100%; display: flex; flex-direction: column; }

@@ -1,20 +1,37 @@
-.app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: var(--spacing-md);
+.app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; overflow: hidden; }
+
+/* ── 标题 ── */
+.app-hd {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: rgba(251,247,238,0.7); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border); box-shadow: var(--shadow-xs);
+  position: relative;
+}
+.app-hd::after {
+  content:''; position: absolute; left: var(--spacing-xl); right: var(--spacing-xl); bottom:-1px; height:1px;
+  background: linear-gradient(to right, transparent, var(--color-accent-gold) 30%, var(--color-accent-gold) 70%, transparent);
+  opacity: 0.4;
+}
+.app-hd h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; color: var(--color-accent-primary); margin-bottom: 4px; }
+.app-hd p  { color: var(--color-text-muted); font-size: 0.88rem; font-style: italic; font-family: var(--font-display); }
+
+/* ── 主区域：三列布局（树 | 古地图 | AI 画廊） ── */
+.app-main {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1.2fr) minmax(280px, 1fr);
+  gap: 1px; overflow: hidden; background: var(--color-border);
+}
+.app-panel { background: var(--color-bg-primary); overflow: hidden; }
+.app-panel--tree { display: flex; align-items: center; justify-content: center; }
+.app-panel--map  { display: flex; align-items: stretch; justify-content: stretch; }
+.app-panel--ai   { display: flex; align-items: stretch; justify-content: stretch; }
+
+@media (max-width: 1200px) {
+  .app-main { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; }
+  .app-panel--tree { grid-column: 1; grid-row: 1 / span 2; }
+  .app-panel--map  { grid-column: 2; grid-row: 1; }
+  .app-panel--ai   { grid-column: 2; grid-row: 2; max-height: 350px; }
 }
 
-.app h1 {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  color: var(--color-accent-cyan);
-  text-shadow: var(--glow-cyan);
-}
-
-.app p {
-  font-size: 1.1rem;
-  color: var(--color-text-secondary);
-}
+/* ── 底部 ── */
+.app-ft { border-top: 1px solid var(--color-border-strong); background: var(--color-bg-secondary); box-shadow: 0 -4px 20px rgba(28,25,23,0.05); }
