@@ -39,6 +39,7 @@ config.local.*
 *.sw?
 .DS_Store
 Thumbs.db
+.claude
 
 # ===========================
 # 日志
