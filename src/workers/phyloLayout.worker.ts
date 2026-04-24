@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 /**
  * 演化谱系树布局 Worker
  *
