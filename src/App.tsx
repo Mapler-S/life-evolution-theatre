@@ -79,6 +79,11 @@ export default function App() {
                     <li>可视化：D3.js + Framer Motion</li>
                   </ul>
                   <p className="app-about-copy">Built with React + TypeScript</p>
+                  <a className="app-about-link"
+                    href={`${import.meta.env.BASE_URL}report.html`}
+                    target="_blank" rel="noreferrer">
+                    📄 查看项目说明文档 →
+                  </a>
                 </motion.div>
               )}
             </AnimatePresence>

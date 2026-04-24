@@ -116,6 +116,20 @@
   font-family: var(--font-data); font-size: 0.68rem; color: rgba(246,241,230,0.35);
   letter-spacing: 0.06em;
 }
+.app-about-link {
+  display: block; margin-top: 10px; padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(201,154,59,0.22), rgba(139,38,53,0.22));
+  border: 1px solid rgba(201,154,59,0.4); border-radius: 3px;
+  color: #f6f1e6; font-family: var(--font-ui); font-size: 0.76rem;
+  font-weight: 600; letter-spacing: 0.04em; text-decoration: none;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+.app-about-link:hover {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 1px rgba(201,154,59,0.3);
+  transform: translateY(-1px);
+}
 
 /* ── 灭绝事件全屏闪烁 ── */
 .app--ext-flash { animation: ext-flash 0.6s ease-out; }

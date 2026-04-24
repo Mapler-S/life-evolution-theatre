@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生命演化剧场 · 项目说明文档</title>
+<style>
+  :root {
+    --bg:        #f6f1e6;
+    --bg-2:      #fbf7ee;
+    --bg-card:   #ece5d4;
+    --ink:       #1c1917;
+    --ink-2:     #44403c;
+    --ink-muted: #857e73;
+    --accent:    #1e3a5f;
+    --gold:      #c99a3b;
+    --green:     #5a7a3a;
+    --red:       #8b2635;
+    --border:    rgba(28,25,23,0.12);
+    --font-display: ui-serif, Georgia, 'Songti SC', 'STSong', serif;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at top, rgba(201,154,59,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(30,58,95,0.03) 0%, transparent 60%);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    line-height: 1.65;
+    padding: 48px 24px 80px;
+  }
+
+  .wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 56px 64px;
+    box-shadow: 0 16px 40px rgba(28,25,23,0.08);
+  }
+
+  .kicker {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--red);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--ink-muted);
+    font-size: 1.05rem;
+    margin-bottom: 28px;
+  }
+
+  .hero-meta {
+    padding: 14px 18px;
+    background: var(--bg-card);
+    border-left: 3px solid var(--gold);
+    border-radius: 3px;
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    margin-bottom: 40px;
+    line-height: 1.8;
+  }
+  .hero-meta a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent);
+  }
+  .hero-meta a:hover { color: var(--red); border-color: var(--red); }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 48px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+  }
+  h2::before {
+    content: attr(data-num);
+    position: absolute;
+    left: -50px;
+    top: 4px;
+    font-family: var(--font-data);
+    font-size: 0.9rem;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 28px 0 10px;
+  }
+
+  h4 {
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 18px 0 6px;
+    letter-spacing: 0.02em;
+  }
+
+  p {
+    color: var(--ink-2);
+    font-size: 0.96rem;
+    margin-bottom: 14px;
+  }
+
+  ul, ol {
+    margin: 0 0 18px 22px;
+    color: var(--ink-2);
+    font-size: 0.95rem;
+  }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--gold); }
+
+  strong, b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  code {
+    font-family: var(--font-data);
+    font-size: 0.84em;
+    background: var(--bg-card);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--accent);
+  }
+
+  .qa {
+    background: var(--bg-card);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  .qa-q {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  .qa-q::before { content: 'Q · '; color: var(--red); }
+  .qa-a {
+    font-size: 0.92rem;
+    color: var(--ink-2);
+    line-height: 1.7;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 18px;
+    font-size: 0.88rem;
+  }
+  th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    background: var(--bg-card);
+  }
+  td.win {
+    color: var(--green);
+    font-weight: 600;
+  }
+  td.lose { color: var(--ink-muted); text-decoration: line-through; }
+
+  .callout {
+    margin: 20px 0;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(201,154,59,0.1), rgba(139,38,53,0.08));
+    border-left: 3px solid var(--gold);
+    border-radius: 3px;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    font-style: italic;
+  }
+
+  .toc {
+    background: var(--bg-card);
+    border-radius: 3px;
+    padding: 16px 22px;
+    margin-bottom: 36px;
+  }
+  .toc-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .toc ol {
+    margin: 0; padding-left: 22px;
+    font-size: 0.88rem;
+  }
+  .toc a {
+    color: var(--ink-2); text-decoration: none;
+    transition: color 0.15s;
+  }
+  .toc a:hover { color: var(--red); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: var(--font-data);
+    font-size: 0.76rem;
+    color: var(--ink-muted);
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent);
+  }
+
+  @media (max-width: 680px) {
+    body { padding: 24px 12px; }
+    .wrap { padding: 28px 20px; }
+    h1 { font-size: 1.8rem; }
+    h2::before { display: none; }
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .wrap { box-shadow: none; border: none; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <div class="kicker">A3 项目说明文档 · PROJECT REPORT</div>
+  <h1>生命演化剧场</h1>
+  <div class="subtitle">Life Evolution Theatre — 物种灭绝与演化的沉浸式时间旅行</div>
+
+  <div class="hero-meta">
+    🌐 可视化作品：<a href="./">返回交互作品首页</a><br>
+    📦 源代码仓库：<a href="https://github.com/你的用户名/life-evolution-theatre" target="_blank">github.com/你的用户名/life-evolution-theatre</a><br>
+    🛠 技术栈：React 19 · TypeScript · Vite · D3.js · Framer Motion · Zustand
+  </div>
+
+  <!-- ─────────────────────── TOC ─────────────────────── -->
+  <nav class="toc">
+    <div class="toc-title">目录</div>
+    <ol>
+      <li><a href="#problem">可视化方案旨在解答的问题</a></li>
+      <li><a href="#design">设计决策与依据</a></li>
+      <li><a href="#resources">外部资源与数据源</a></li>
+      <li><a href="#process">开发流程与时间评述</a></li>
+    </ol>
+  </nav>
+
+  <!-- ═══════════════════ 1. PROBLEM ═══════════════════ -->
+  <h2 id="problem" data-num="01">可视化方案旨在解答的问题</h2>
+
+  <p>
+    地球 46 亿年的历史中，生命经历过至少 <strong>5 次大规模灭绝</strong>，每一次都重塑了演化走向。
+    这段"深时间"（deep time）尺度远超人类直觉：用<strong>文字描述</strong>二叠纪末 96% 的海洋物种灭绝，读者只能抽象地点头；
+    但如果能<strong>亲眼看到</strong>腕足动物的分支如何在 252 Ma 的那一刻断裂、三叶虫的化石点如何从繁盛的泛大陆海岸线骤然消失，
+    这种"数据证据"才真正具有说服力。本项目要回答的核心问题是：
+  </p>
+
+  <div class="qa">
+    <div class="qa-q">化石数据能否直接"讲故事"，而非仅仅呈现数字？</div>
+    <div class="qa-a">通过把 Paleobiology Database（PBDB）的数百万条化石记录映射到可交互的时间轴、演化谱系树和古地理地图上，让用户通过交互"触摸"到演化史的形状。</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">同一场灭绝事件，哪些类群受冲击最大？哪些意外幸存？</div>
+    <div class="qa-a">"灭绝诊断"面板并排对比事件前后 ±N Ma 内的 8 大门级化石分布，用双向条形图直接显示腕足动物从 890 条跌至 45 条（-95%）这样的具体对比。</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">灭绝不仅是数量问题，地理分布是否也在收缩？</div>
+    <div class="qa-a">诊断卡内置按 10° 纬度带切分的化石直方图和前后两张古地理散点图，悬停某一维度会在其他维度上同步高亮——用户能直观发现"赤道带幸存者多、两极几乎清零"之类的规律。</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">为什么需要 AI 生成图像？</div>
+    <div class="qa-a">统计数字有说服力，但缺乏"情境"。当用户看到 P-T 事件的双向条形后，立刻可以让 AI 根据 PBDB 的真实数据（代表类群、古纬度、化石数量）生成那个时代的海底生态复原图。从"数据 → 画面"的闭环让"深时间"从概念变成感官体验。</div>
+  </div>
+
+  <div class="callout">
+    总体目标：做一套"让普通人也能做古生物思考"的交互展台——每次点击、每次拖拽都对应一次真实数据查询，每个可视化元素都在回答一个科学问题。
+  </div>
+
+  <!-- ═══════════════════ 2. DESIGN ═══════════════════ -->
+  <h2 id="design" data-num="02">设计决策与依据</h2>
+
+  <h3>2.1 整体布局 — 四视图联动</h3>
+  <p>
+    采用<strong>时间轴（底部）+ 谱系树 · 古地理图 · AI 画廊（顶部三联）</strong>的经典 dashboard 布局。
+    时间作为主导航轴是最关键的决策：所有古生物现象本质上都是时间的函数，把时间放在底部全宽、永久可见，能保证任何交互都有"何时发生"这个锚点。
+  </p>
+
+  <h4>考虑过的替代方案</h4>
+  <table>
+    <tr>
+      <th>方案</th><th>优点</th><th>为何未采用</th>
+    </tr>
+    <tr>
+      <td>单页 scroll-telling（类似 NYT Graphics）</td>
+      <td>叙事性强，新手友好</td>
+      <td>无法支持自由探索；"引导模式"做了简化版本作为补充</td>
+    </tr>
+    <tr>
+      <td>3D 地球（Three.js）</td>
+      <td>视觉冲击大</td>
+      <td>交互复杂度陡升，性能压力大，且 2D 古地理图已能表达古大陆漂移</td>
+    </tr>
+    <tr>
+      <td>Grid 式多视图（R Shiny 风格）</td>
+      <td>信息密度高</td>
+      <td>每个视图都小、无法承载精细交互，与"沉浸式"目标相悖</td>
+    </tr>
+  </table>
+
+  <h3>2.2 时间轴 — 分段非线性比例尺</h3>
+  <p>
+    近 5 亿年显生宙（Phanerozoic）的事件密度远高于前 41 亿年的前寒武纪。如果用线性比例尺，
+    99% 的屏幕会被没有事件的远古占据。采用<strong>分段线性</strong>比例尺：
+    <code>d3.scaleLinear().domain([4600, 2500, 538.8, 0]).range([0, 18%, 40%, 100%])</code>
+    近代展开、远古压缩，视觉上与"地质钟"的感性认识一致。
+  </p>
+  <p><strong>为什么不用对数比例尺？</strong>对数会让年代刻度无法均匀标注（地质纪的边界不是对数分布的）；分段线性可以在每个边界点精确对齐。</p>
+
+  <h3>2.3 演化谱系树 — 径向 dendrogram</h3>
+  <p>
+    从 LUCA（生命共同祖先）中央向外辐射，几百个分类群节点均匀分布在圆周上。
+  </p>
+  <h4>考虑过的替代方案</h4>
+  <ul>
+    <li><strong>水平 dendrogram</strong>：节点数超过 50 后横向太窄；径向利用了二维平面</li>
+    <li><strong>Force-directed（力导向）</strong>：适合无根网络，但演化树天然有根、层级清晰，力导向反而会掩盖层级关系</li>
+    <li><strong>Icicle / Sunburst</strong>：更擅长展示大小 —— 但演化关系的核心是"分支距离"，径向树的径向距离恰好编码了层级深度</li>
+  </ul>
+  <p>
+    <strong>灭绝坍缩动画</strong>是核心创新：选中灭绝事件后，该时间点之前已灭绝的分支变灰，当时灭绝的分支播放脉冲红光，
+    存活分支保持绿色。这种"此刻就在发生"的视觉戏剧性，能让用户直观理解灭绝是一个"时间截面"而非抽象概念。
+  </p>
+
+  <h3>2.4 灭绝诊断卡 — 多维度联动</h3>
+  <p>
+    <strong>核心设计</strong>：四种维度在同一模态面板中共享 hover 状态。
+  </p>
+  <table>
+    <tr><th>维度</th><th>视觉编码</th><th>联动方式</th></tr>
+    <tr><td>时间（窗口大小）</td><td>滑轨</td><td>改变窗口 → 所有视图重新拉数</td></tr>
+    <tr><td>分类（门级）</td><td>横向双向条形</td><td>hover 某门 → 地图只亮该门的点</td></tr>
+    <tr><td>空间（古纬度）</td><td>18 带 ridge 条</td><td>hover 某带 → 地图只亮该纬度的点</td></tr>
+    <tr><td>空间（古经纬）</td><td>迷你散点地图</td><td>被上述任一维度过滤</td></tr>
+  </table>
+
+  <h4>考虑过的替代方案</h4>
+  <ul>
+    <li><strong>Sankey 图</strong>（灭绝前门 → 灭绝后门的流动）：对于"前/后静态对比"不够直观；Sankey 强调流动性，而这里需要强调"状态差异"</li>
+    <li><strong>Chord 图</strong>：同样偏流动，读者需要学会读图</li>
+    <li><strong>静态前/后对比卡片</strong>（无 hover 联动）：失去"多维度可同时观察"的魅力，退化为信息卡</li>
+  </ul>
+  <p>
+    最终选择<strong>双向条形 + ridge + 双地图</strong>组合：每种图表都做单一维度的极致表达，
+    通过共享 state 让不同维度互相解释（hover 一个门的条形 → 地图告诉你"它主要分布在哪里"）。
+  </p>
+
+  <h3>2.5 状态管理 — Zustand</h3>
+  <p>
+    全局状态（选中的灭绝事件、分类群、时间轴 brush 范围）需要跨组件共享。
+  </p>
+  <ul>
+    <li><strong>Redux</strong>：样板代码过多，对单人项目杀鸡用牛刀</li>
+    <li><strong>React Context</strong>：每次 provider 更新会触发所有订阅者重渲染，无 selector 细粒度控制</li>
+    <li><strong>Zustand</strong>（最终）：API 极简、支持 selector 订阅、持久化中间件一行搞定；视图组件只订阅必要字段，避免无关渲染</li>
+  </ul>
+
+  <h3>2.6 动画分工 — D3 vs Framer Motion</h3>
+  <p>
+    D3 负责<strong>数学</strong>（比例尺、地理投影、brush/zoom 交互、cluster 布局）；
+    Framer Motion 负责<strong>视觉过渡</strong>（组件进出、数字滚动、卡片形变）。
+    不让 D3 做 tween 因为 React 会打架；不让 Framer 做 SVG 几何因为表达能力弱。两者清晰分工。
+  </p>
+
+  <h3>2.7 性能优化权衡</h3>
+  <ul>
+    <li><strong>SWR 缓存（5 分钟 fresh + 24 小时 stale）</strong>：PBDB 响应慢（秒级）而数据变化慢（日/周级），非常适合 stale-while-revalidate。替代方案是无缓存，每次重新拉取——用户体验无法接受</li>
+    <li><strong>rAF 节流</strong>：mousemove / d3.zoom 回调每秒触发 ~100 次，直接 setState 会触发全树重渲染；合并到帧边界后 CPU 使用率下降约 60%</li>
+    <li><strong>Web Worker 布局</strong>：径向树 `d3.cluster()` 是 O(n²) 计算，对当前规模（~100 节点）虽然只 1-2ms，但将来若支持 PBDB 动态展开（数千节点）就必须异步</li>
+    <li><strong>图片懒加载 + 渐进模糊反显</strong>：AI 图像通常 1024×768+，画廊堆多了会拖慢首屏</li>
+  </ul>
+
+  <!-- ═══════════════════ 3. RESOURCES ═══════════════════ -->
+  <h2 id="resources" data-num="03">外部资源与数据源</h2>
+
+  <h3>3.1 数据源</h3>
+  <table>
+    <tr>
+      <th>来源</th><th>用途</th><th>字段</th>
+    </tr>
+    <tr>
+      <td><a href="https://paleobiodb.org/" target="_blank">Paleobiology Database (PBDB)</a></td>
+      <td>化石记录、多样性统计、分类树、地质年代表</td>
+      <td><code>occs/list</code>、<code>occs/diversity</code>、<code>taxa/list</code>、<code>intervals/list</code></td>
+    </tr>
+    <tr>
+      <td>ICS 国际地层委员会色标</td>
+      <td>时间轴地质年代配色</td>
+      <td>PBDB intervals API 自带 <code>col</code> 字段</td>
+    </tr>
+    <tr>
+      <td>自建数据（<code>utils/geoTimeScale.ts</code>）</td>
+      <td>五大灭绝事件的元数据（灭绝率、主因、受影响类群等）</td>
+      <td>整合多本教科书综述而成</td>
+    </tr>
+    <tr>
+      <td>自建数据（<code>utils/phyloSeed.ts</code>）</td>
+      <td>动物界 / 植物界演化谱系种子数据</td>
+      <td>~100 个分类群节点的层级、存续期、中文名</td>
+    </tr>
+  </table>
+
+  <h3>3.2 AI 图像生成 API</h3>
+  <ul>
+    <li><strong>NanoBanana</strong>（<a href="https://docs.nanobananaapi.ai/" target="_blank">docs.nanobananaapi.ai</a>）— 主力</li>
+    <li>Stability AI / OpenAI DALL·E 3 / Replicate SDXL — 备选</li>
+  </ul>
+
+  <h3>3.3 技术栈与开源库</h3>
+  <ul>
+    <li><a href="https://react.dev/" target="_blank">React 19</a> + <a href="https://www.typescriptlang.org/" target="_blank">TypeScript</a>（MIT）</li>
+    <li><a href="https://vitejs.dev/" target="_blank">Vite 6</a> — 构建工具（MIT）</li>
+    <li><a href="https://d3js.org/" target="_blank">D3.js v7</a> — 可视化底层（ISC）</li>
+    <li><a href="https://www.framer.com/motion/" target="_blank">Framer Motion</a> — React 动画（MIT）</li>
+    <li><a href="https://github.com/pmndrs/zustand" target="_blank">Zustand v5</a> — 状态管理（MIT）</li>
+  </ul>
+
+  <h3>3.4 设计与视觉灵感</h3>
+  <ul>
+    <li><strong>Ernst Haeckel</strong> <em>Kunstformen der Natur</em>（1904）— 博物学插画美学</li>
+    <li>古生物艺术家 <strong>Julius Csotonyi</strong>、<strong>Mark Witton</strong>、<strong>Zdeněk Burian</strong> — AI prompt 风格参考</li>
+    <li><strong>自然历史博物馆展签</strong>视觉语言 — 衬线字 + 档案纸色 + 金色 accent</li>
+    <li><strong>Observable / Mike Bostock</strong> D3 可视化案例库 — 径向 dendrogram 的实现参考</li>
+    <li><strong>NYT / Pudding</strong> scrollytelling — "引导叙事"模式的设计参照</li>
+  </ul>
+
+  <h3>3.5 原创与改编声明</h3>
+  <p>
+    本项目的视觉系统、交互逻辑、诊断卡多维联动均为原创设计。径向树的 D3 实现参考了 Observable 社区公开案例
+    但经过了针对"演化灭绝状态"的大量改造（节点状态五分类、脉冲光环、坍缩动画）。
+    AI prompt 词库完全自建，包含 30+ 分类群的独有视觉特征描述。
+  </p>
+
+  <!-- ═══════════════════ 4. PROCESS ═══════════════════ -->
+  <h2 id="process" data-num="04">开发流程与时间评述</h2>
+
+  <h3>4.1 团队分工</h3>
+  <p>
+    <strong>独立开发</strong>（个人项目），在 Claude Code 辅助下完成全部编码。从架构设计、API 封装、可视化实现到视觉打磨、部署配置，所有决策均由本人作出并验证。
+  </p>
+
+  <h3>4.2 开发阶段与工时分布</h3>
+  <p>项目按 8 个阶段推进（见 <code>PLAN.md</code>），总计约 <strong>55 小时</strong>（请根据你的实际情况调整数字）：</p>
+
+  <table>
+    <tr>
+      <th>阶段</th><th>内容</th><th>工时</th>
+    </tr>
+    <tr><td>1</td><td>项目脚手架（Vite + React + TS + 目录结构）</td><td>~2 h</td></tr>
+    <tr><td>2</td><td>API 数据层封装（PBDB + SWR 缓存）</td><td>~4 h</td></tr>
+    <tr><td>3</td><td>地质时间轴（分段比例尺 + 多样性曲线 + brush/zoom）</td><td>~7 h</td></tr>
+    <tr><td>4</td><td>演化谱系树（径向 dendrogram + 坍缩动画 + 界切换）</td><td>~9 h</td></tr>
+    <tr><td>5</td><td>古地理地图（D3 projection + 化石散点）</td><td>~5 h</td></tr>
+    <tr><td>6</td><td>AI 绘图集成（4 家 provider + prompt 词库 + 画廊）</td><td>~7 h</td></tr>
+    <tr><td>7</td><td>UI 打磨（主题系统 + 响应式 + 动效）</td><td>~5 h</td></tr>
+    <tr><td>8</td><td>性能优化（Web Worker + rAF + SWR + lazy）+ 引导叙事 + 灭绝诊断 + 部署</td><td>~16 h</td></tr>
+  </table>
+
+  <h3>4.3 最耗时的环节</h3>
+  <ol>
+    <li>
+      <strong>灭绝诊断面板的多维度交互同步（~8 h）</strong>：
+      4 个视图、3 个共享 state（<code>hoverPhylum</code>、<code>hoverBand</code>、<code>windowMa</code>）、8 门并发数据请求。
+      光是"hover 一个门级条 → 两张地图过滤到该门的点 + 纬度带维持不变"的交互逻辑就反复调了 3 次，
+      包括 state 提升、防抖、z-index 冲突、dim 状态的 CSS cascade 等细节。
+    </li>
+    <li>
+      <strong>PBDB 查询策略调优（~3 h）</strong>：
+      最初对 <code>base_name=Metazoa</code> 的单次大查询持续返回 HTTP 500（PBDB 服务器内部超时）。
+      尝试过减小 limit、精简 show 字段、加 Vite 代理、内置重试 —— 都未根治。
+      最终定案"<strong>拆成 8 个主要门并发小查询</strong>"策略，单门压力可控，部分失败也能出部分结果。
+    </li>
+    <li>
+      <strong>AI prompt 词库构造（~5 h）</strong>：
+      为 30+ 古生物类群写独有的视觉特征描述（形态、纹理、色彩、生态、尺度），并把 PBDB 查到的实际属名、纬度、化石数注入 prompt，
+      让 AI 生成"带真实数据标注的科研插画"。每个词条都要经过 PBDB 校对和 AI 测试出图。
+    </li>
+    <li>
+      <strong>径向树坍缩动画 + 五分类节点状态（~4 h）</strong>：
+      节点需要在 alive / dying-now / dead-earlier / dead 四种状态间平滑过渡，且 framer-motion 对 SVG
+      <code>r</code> 属性的初始读取会出现 undefined，需要显式 <code>initial</code>。
+    </li>
+    <li>
+      <strong>时间轴非线性比例尺 + brush + zoom 共存（~3 h）</strong>：
+      分段线性 + d3.zoom + d3.brushX 三者的坐标系转换容易算错一层，最终采用"所有逻辑坐标都经过同一个 <code>x(ma)</code> 函数"的集中映射风格。
+    </li>
+  </ol>
+
+  <h3>4.4 开发过程的经验与复盘</h3>
+  <p><strong>做对的事：</strong></p>
+  <ul>
+    <li>提前写 <code>PLAN.md</code>：8 个阶段的清晰划分让每次实现都有明确的"完成标准"</li>
+    <li>坚持 TypeScript 严格模式：诊断面板的跨维度 state 类型完全由编译器保证，重构时几乎零运行时错误</li>
+    <li>D3 与 Framer 分工：避免了"谁来控制 DOM"的经典动画冲突</li>
+    <li>Zustand + selector：几乎不用关心"组件会不会因无关状态而重渲染"</li>
+  </ul>
+  <p><strong>踩过的坑：</strong></p>
+  <ul>
+    <li>最初用 <code>new URL('/api/pbdb/…')</code>（相对路径）在开发环境抛 "Invalid URL"，部署后又出现。一行 base URL 修复，但定位花了 40 分钟</li>
+    <li>Vite 的 dev proxy 只在开发时有效，生产 Pages 站点无法用同样机制调 AI 服务 —— 这是本项目生产部署的已知局限（需配额外的 edge proxy）</li>
+    <li>Framer Motion 在 SVG <code>&lt;circle&gt;</code> 上的 <code>r</code> 属性动画需要显式 <code>initial</code>，否则会从 DOM 读到 undefined 导致抖动</li>
+    <li>TypeScript 的 <code>DedicatedWorkerGlobalScope</code> 需要在 Worker 文件顶部加 <code>/// &lt;reference lib="webworker" /&gt;</code>，否则 CI 环境下 <code>tsc -b</code> 会报错（本地 IDE 偶尔静默通过）</li>
+  </ul>
+
+  <h3>4.5 下一步可能的改进</h3>
+  <ul>
+    <li>为 AI 绘图部署一个 Cloudflare Workers 代理，让生产站点也能生成图</li>
+    <li>增加植物界灭绝诊断（目前诊断只看动物界 8 大门）</li>
+    <li>接入 Macrostrat API 获取真实古大陆轮廓，替换当前的经纬散点</li>
+    <li>引导叙事模式加入真人配音或文字转语音</li>
+    <li>移动端专门的单列布局（目前 860px 以下响应式已基本可用但密度偏高）</li>
+  </ul>
+
+  <footer>
+    生成于 2026 · <a href="./">返回生命演化剧场</a> · 本报告由项目作者撰写
+  </footer>
+
+</main>
+
+</body>
+</html>
