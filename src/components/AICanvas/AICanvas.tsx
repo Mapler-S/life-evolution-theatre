@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAIImage, composePrompt } from '../../hooks/useAIImage'
+import { useOccurrences } from '../../hooks/usePBDB'
 import { useExploreStore } from '../../stores/useExploreStore'
 import {
   buildDefaultPrompt,
   buildExtinctionDiptychPrompt,
   buildTaxonPrompt,
+  computeTaxonStats,
 } from '../../utils/promptBuilder'
 import type { AIImageResult, AIImageStyle, AIProvider } from '../../types'
 import './AICanvas.css'
@@ -20,15 +22,17 @@ const STYLES: { id: AIImageStyle; label: string; hint: string }[] = [
 
 /* ── 提供方选项 ── */
 const PROVIDERS: { id: AIProvider; label: string }[] = [
-  { id: 'stability', label: 'Stability AI' },
-  { id: 'dalle',     label: 'OpenAI DALL·E 3' },
-  { id: 'replicate', label: 'Replicate SDXL' },
+  { id: 'nanobanana', label: 'NanoBanana (推荐)' },
+  { id: 'stability',  label: 'Stability AI' },
+  { id: 'dalle',      label: 'OpenAI DALL·E 3' },
+  { id: 'replicate',  label: 'Replicate SDXL' },
 ]
 
 /* ══════════════════════════════════════════════════ */
 export default function AICanvas() {
   const selExt   = useExploreStore(s => s.selectedExtinction)
   const selTax   = useExploreStore(s => s.selectedTaxon)
+  const timeRng  = useExploreStore(s => s.timeRange)
   const gallery  = useExploreStore(s => s.gallery)
   const addImg   = useExploreStore(s => s.addGalleryImage)
   const rmImg    = useExploreStore(s => s.removeGalleryImage)
@@ -40,6 +44,24 @@ export default function AICanvas() {
 
   const { generateImage, loading, error } = useAIImage()
 
+  /* ── 查询选中类群的 PBDB 化石数据 ── */
+  const rawTaxName = selTax?.nam ?? ''
+  const cleanTaxName = rawTaxName.replace(/\s*\([^)]*\)/g, '').trim()
+  const occQuery = useMemo(() => {
+    // 优先级：灭绝事件窗口 > 时间轴框选 > 全部
+    if (selExt) {
+      return { max_ma: selExt.ma + 10, min_ma: Math.max(0, selExt.ma - 10), limit: 500 }
+    }
+    const [older, younger] = timeRng
+    // 非默认（[4600,0]）才作为过滤条件
+    if (older < 4600 || younger > 0) {
+      return { max_ma: older, min_ma: younger, limit: 500 }
+    }
+    return { limit: 500 }
+  }, [selExt, timeRng])
+  const { data: occs } = useOccurrences(cleanTaxName, occQuery)
+  const taxonStats = useMemo(() => occs ? computeTaxonStats(occs) : null, [occs])
+
   const [style, setStyle]       = useState<AIImageStyle>('scientific')
   const [basePrompt, setBasePrompt] = useState('')
   const [settingsOpen, setSO]   = useState(false)
@@ -48,14 +70,15 @@ export default function AICanvas() {
   /* 用原始值做依赖，保证上下文切换时 effect 必触发 */
   const taxId = selTax?.oid ?? ''
   const extId = selExt?.id ?? ''
+  const statsKey = taxonStats?.totalOccurrences ?? 0
 
   useEffect(() => {
-    const s = buildDefaultPrompt(selExt, selTax)
+    const s = buildDefaultPrompt(selExt, selTax, taxonStats)
     setBasePrompt(s.prompt)
     if (s.scene === 'diptych') setStyle('diptych')
     else if (s.scene === 'taxon') setStyle('scientific')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxId, extId])
+  }, [taxId, extId, statsKey])
 
   /* 最终发送给 API 的完整 prompt（base + 风格尾缀），用户可实时预览 */
   const finalPrompt = useMemo(
@@ -93,13 +116,19 @@ export default function AICanvas() {
     } else if (scene === 'taxon' && selTax) {
       setBasePrompt(buildTaxonPrompt({
         taxonName: selTax.nam.replace(/\s*\([^)]*\)/g, '').trim(),
+        stats: taxonStats,
       }))
       setStyle('scientific')
     }
   }
 
+  const rangeActive = !selExt && (timeRng[0] < 4600 || timeRng[1] > 0)
+  const rangeLabel = rangeActive
+    ? `${timeRng[0].toFixed(0)}–${timeRng[1].toFixed(0)} Ma`
+    : null
   const ctxLabel = selExt ? `${selExt.nameZh} · ${selExt.ma} Ma`
-                 : selTax ? selTax.nam
+                 : selTax ? `${selTax.nam}${rangeLabel ? ' · ' + rangeLabel : ''}`
+                 : rangeLabel ? `时间窗口 ${rangeLabel}`
                  : null
 
   return (
@@ -160,6 +189,30 @@ export default function AICanvas() {
           类群复原图
         </button>
       </div>
+
+      {/* PBDB 数据摘要 */}
+      <AnimatePresence>
+        {taxonStats && selTax && (
+          <motion.div className="ai-data-badge"
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}>
+            <div className="ai-data-title">PBDB 数据已注入 prompt</div>
+            <div className="ai-data-row">
+              <span>{taxonStats.totalOccurrences} 条化石记录</span>
+              <span>{taxonStats.earliestMa}–{taxonStats.latestMa} Ma</span>
+            </div>
+            <div className="ai-data-row">
+              <span>{taxonStats.geoSpread}</span>
+              <span>lat {taxonStats.latRange[0]}° ~ {taxonStats.latRange[1]}°</span>
+            </div>
+            {taxonStats.representativeSpecies.length > 0 && (
+              <div className="ai-data-spp">
+                {taxonStats.representativeSpecies.slice(0, 3).join(' · ')}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Prompt 编辑 */}
       <textarea className="ai-prompt"
@@ -245,8 +298,13 @@ export default function AICanvas() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.25 }}
               onClick={() => setLightbox(img)}>
-              <img src={img.url} alt={img.prompt}
-                onError={e => e.currentTarget.classList.add('ai-img-broken')}/>
+              <div className="ai-card-img-wrap">
+                <div className="ai-card-skel skel" aria-hidden="true"/>
+                <img src={img.url} alt={img.prompt}
+                  loading="lazy" decoding="async"
+                  onLoad={e => e.currentTarget.classList.add('ai-img-loaded')}
+                  onError={e => e.currentTarget.classList.add('ai-img-broken')}/>
+              </div>
               <div className="ai-card-meta">
                 <div className="ai-card-time">{formatTime(img.createdAt)}</div>
                 {img.tags && img.tags.length > 0 && (
@@ -271,7 +329,9 @@ export default function AICanvas() {
             <motion.div className="ai-lightbox-inner"
               initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
               onClick={e => e.stopPropagation()}>
-              <img src={lightbox.url} alt={lightbox.prompt}/>
+              <img src={lightbox.url} alt={lightbox.prompt}
+                loading="eager" decoding="async"
+                onLoad={e => e.currentTarget.classList.add('ai-img-loaded')}/>
               <div className="ai-lightbox-caption">
                 <div className="ai-lightbox-prompt">{lightbox.prompt}</div>
                 <div className="ai-lightbox-meta">

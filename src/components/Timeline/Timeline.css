@@ -28,6 +28,37 @@
 /* ── Hover 参考线 ── */
 .tl-hover-line { stroke: var(--color-accent-primary); stroke-width: 1; stroke-dasharray: 2 3; stroke-opacity: 0.5; }
 
+/* ── 框选范围提示条 ── */
+.tl-range-chip {
+  position: absolute; top: 6px; right: 10px; z-index: 5;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px 4px 10px; border-radius: 14px;
+  background: rgba(30,58,95,0.12); border: 1px solid var(--color-accent-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui); font-size: 0.72rem; line-height: 1;
+  backdrop-filter: blur(4px);
+}
+.tl-range-chip b { font-family: var(--font-data); color: var(--color-accent-primary); font-weight: 600; }
+.tl-range-chip-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-accent-primary);
+  box-shadow: 0 0 6px var(--color-accent-primary);
+  animation: tl-range-pulse 1.8s ease-in-out infinite;
+}
+@keyframes tl-range-pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.45; }
+}
+.tl-range-chip-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; margin-left: 2px; padding: 0;
+  background: transparent; border: none; border-radius: 50%;
+  color: var(--color-text-secondary); font-size: 14px; line-height: 1; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.tl-range-chip-clear:hover {
+  background: var(--color-extinction); color: #fff;
+}
+
 /* ── Brush ── */
 .tl-brush .selection { fill: var(--color-accent-primary); fill-opacity: 0.1; stroke: var(--color-accent-primary); stroke-opacity: 0.5; stroke-dasharray: 3 2; }
 .tl-brush .handle    { fill: var(--color-accent-primary); fill-opacity: 0.35; }

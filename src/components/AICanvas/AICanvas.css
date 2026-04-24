@@ -67,6 +67,28 @@
 .ai-chip:hover:not(:disabled) { background: var(--color-bg-inset); border-color: var(--color-accent-primary); }
 .ai-chip:disabled { opacity: 0.4; cursor: default; }
 
+/* ── PBDB 数据摘要徽章 ── */
+.ai-data-badge {
+  margin-bottom: var(--spacing-sm); padding: 6px 10px; overflow: hidden;
+  background: rgba(30,58,95,0.06); border: 1px solid rgba(30,58,95,0.15);
+  border-radius: 3px;
+}
+.ai-data-title {
+  font-family: var(--font-data); font-size: 0.66rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-accent-primary); margin-bottom: 4px;
+}
+.ai-data-row {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--font-data); font-size: 0.72rem; color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.ai-data-spp {
+  margin-top: 2px; font-family: var(--font-data); font-size: 0.68rem;
+  font-style: italic; color: var(--color-text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* ── Prompt 编辑 ── */
 .ai-prompt {
   width: 100%; resize: vertical; min-height: 48px; max-height: 120px;
@@ -245,13 +267,33 @@
   border-color: var(--color-accent-gold); box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
+.ai-card-img-wrap {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: var(--color-bg-inset); overflow: hidden;
+}
+.ai-card-skel {
+  position: absolute; inset: 0; border-radius: 0;
+}
 .ai-card img {
-  width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;
-  background: var(--color-bg-inset);
+  position: relative; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  opacity: 0; transform: scale(1.015);
+  transition: opacity 0.45s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+  filter: blur(6px);
+}
+.ai-card img.ai-img-loaded {
+  opacity: 1; transform: none; filter: none;
 }
 .ai-card img.ai-img-broken {
   opacity: 0.2; filter: grayscale(1);
 }
+/* 加载完成后隐藏骨架，避免继续占用 GPU 动画 */
+.ai-card-img-wrap:has(img.ai-img-loaded) .ai-card-skel { display: none; }
+/* Lightbox 图片渐显 */
+.ai-lightbox-inner img {
+  opacity: 0; transition: opacity 0.35s ease-out;
+}
+.ai-lightbox-inner img.ai-img-loaded { opacity: 1; }
 .ai-card-meta {
   position: absolute; bottom: 0; left: 0; right: 0; padding: 4px 6px;
   background: linear-gradient(transparent, rgba(28,25,23,0.75));

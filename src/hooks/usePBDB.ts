@@ -12,8 +12,24 @@ import type {
 /**
  * PBDB (Paleobiology Database) API 封装
  * 文档：https://paleobiodb.org/data1.2/
+ *
+ * 开发环境走 Vite 代理：浏览器 → localhost → Vite → paleobiodb.org
+ * 这样保留了 Vite 进程到 PBDB 的长连接 keep-alive 和更宽容的超时，
+ * 能显著缓解境外 API 被网络中间设备 RST 的问题。
+ * 生产构建（GitHub Pages）下直连 PBDB。
  */
-const PBDB_BASE = 'https://paleobiodb.org/data1.2'
+const PBDB_BASE = import.meta.env.DEV
+  ? '/api/pbdb/data1.2'
+  : 'https://paleobiodb.org/data1.2'
+
+/**
+ * 构造 URL —— 兼容绝对路径（生产）与相对路径（开发代理）。
+ * `new URL(relative)` 会抛 "Invalid URL"，必须提供 base。
+ */
+function pbdbUrl(path: string): URL {
+  // 若 PBDB_BASE 已是绝对 URL，第二参数会被忽略；否则以当前页面 origin 为基
+  return new URL(`${PBDB_BASE}${path}`, window.location.origin)
+}
 
 interface PBDBResponse<T> {
   records: T[]
@@ -33,7 +49,7 @@ export async function fetchDiversity(
   resolution: DiversityResolution = 'stage',
   signal?: AbortSignal,
 ): Promise<DiversityPoint[]> {
-  const url = new URL(`${PBDB_BASE}/occs/diversity.json`)
+  const url = pbdbUrl('/occs/diversity.json')
   url.searchParams.set('base_name', taxon)
   url.searchParams.set('count', 'genera')
   url.searchParams.set('time_reso', resolution)
@@ -56,7 +72,7 @@ export async function fetchTaxaTree(
   interval?: string,
   signal?: AbortSignal,
 ): Promise<TaxonNode[]> {
-  const url = new URL(`${PBDB_BASE}/taxa/list.json`)
+  const url = pbdbUrl('/taxa/list.json')
   url.searchParams.set('base_name', baseName)
   url.searchParams.set('rel', 'all_children')
   url.searchParams.set('show', 'attr,app,size')
@@ -102,6 +118,8 @@ export interface OccurrencesQuery {
   min_ma?: number
   /** 返回条数上限 */
   limit?: number
+  /** 覆盖默认 show 字段；PBDB 大查询（如 base_name=Metazoa）时减少字段能显著降低服务器压力 */
+  show?: string
 }
 
 /** PBDB 紧凑词汇表（默认）的原始响应字段 */
@@ -139,9 +157,9 @@ export async function fetchOccurrences(
   query: OccurrencesQuery = {},
   signal?: AbortSignal,
 ): Promise<Occurrence[]> {
-  const url = new URL(`${PBDB_BASE}/occs/list.json`)
+  const url = pbdbUrl('/occs/list.json')
   url.searchParams.set('base_name', taxon)
-  url.searchParams.set('show', 'coords,phylo,time,paleoloc')
+  url.searchParams.set('show', query.show ?? 'coords,phylo,time,paleoloc')
   if (query.interval) url.searchParams.set('interval', query.interval)
   if (typeof query.max_ma === 'number')
     url.searchParams.set('max_ma', String(query.max_ma))
@@ -154,17 +172,23 @@ export async function fetchOccurrences(
   // 规范化：lng/lat 字符串 → number，pln/pla → paleolng/paleolat
   const out: Occurrence[] = []
   for (const r of res.records) {
-    const lng = toNum(r.lng)
-    const lat = toNum(r.lat)
-    if (lng === undefined || lat === undefined) continue
+    const lng  = toNum(r.lng)
+    const lat  = toNum(r.lat)
+    const plng = toNum(r.pln)
+    const plat = toNum(r.pla)
+    // 接受任何一对可用坐标（现代 or 古地理），避免在没请求 coords 时全被过滤
+    const hasModern = lng !== undefined && lat !== undefined
+    const hasPaleo  = plng !== undefined && plat !== undefined
+    if (!hasModern && !hasPaleo) continue
     out.push({
       oid: r.oid,
       cid: r.cid,
       idn: r.idn,
       tna: r.tna,
-      lng, lat,
-      paleolng: toNum(r.pln),
-      paleolat: toNum(r.pla),
+      lng: lng ?? plng!,
+      lat: lat ?? plat!,
+      paleolng: plng,
+      paleolat: plat,
       phl: r.phl,
       cll: r.cll,
       odl: r.odl,
@@ -189,7 +213,7 @@ export async function fetchTimeIntervals(
   scaleLevel: 1 | 2 | 3 | 4 | 5 = 3,
   signal?: AbortSignal,
 ): Promise<GeoInterval[]> {
-  const url = new URL(`${PBDB_BASE}/intervals/list.json`)
+  const url = pbdbUrl('/intervals/list.json')
   url.searchParams.set('scale', '1')
   url.searchParams.set('scale_level', String(scaleLevel))
   const res = await fetchJson<PBDBResponse<GeoInterval>>(url.toString(), {

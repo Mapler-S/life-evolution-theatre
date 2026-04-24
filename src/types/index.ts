@@ -136,7 +136,7 @@ export interface ExtinctionEvent {
 // AI 绘图
 // ============================================================
 
-export type AIProvider = 'stability' | 'dalle' | 'replicate'
+export type AIProvider = 'nanobanana' | 'stability' | 'dalle' | 'replicate'
 
 export type AIImageStyle =
   | 'scientific'

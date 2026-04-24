@@ -8,7 +8,7 @@
  * - 兼顾科学准确性和艺术表现力
  */
 
-import type { ExtinctionEvent, TaxonNode } from '../types'
+import type { ExtinctionEvent, Occurrence, TaxonNode } from '../types'
 
 /* ══════════════════════════════════════════════════
    类群专属视觉特征词库
@@ -415,6 +415,80 @@ const DEFAULT_TRAITS: TaxonTraits = {
 }
 
 /* ══════════════════════════════════════════════════
+   从 PBDB 化石记录中提取数据统计
+   ══════════════════════════════════════════════════ */
+
+export interface TaxonDataStats {
+  /** 化石记录总数 */
+  totalOccurrences: number
+  /** 时间跨度 */
+  earliestMa: number
+  latestMa: number
+  /** 地理覆盖 — 大致纬度范围 */
+  latRange: [number, number]
+  lngRange: [number, number]
+  /** 化石产地的主要大洲/区域描述 */
+  geoSpread: string
+  /** 门级分类组成 */
+  phylumBreakdown: { name: string; count: number; pct: number }[]
+  /** 代表性属/种名（前 5 个不重复 tna） */
+  representativeSpecies: string[]
+}
+
+/** 从化石记录数组提取可用于 prompt 的统计信息 */
+export function computeTaxonStats(occs: Occurrence[]): TaxonDataStats | null {
+  if (!occs.length) return null
+
+  let minMa = Infinity, maxMa = -Infinity
+  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
+  const phyla = new Map<string, number>()
+  const species = new Set<string>()
+
+  for (const o of occs) {
+    if (o.eag !== undefined && o.eag > maxMa) maxMa = o.eag
+    if (o.lag !== undefined && o.lag < minMa) minMa = o.lag
+    const lat = o.paleolat ?? o.lat
+    const lng = o.paleolng ?? o.lng
+    if (lat < minLat) minLat = lat
+    if (lat > maxLat) maxLat = lat
+    if (lng < minLng) minLng = lng
+    if (lng > maxLng) maxLng = lng
+    const ph = o.phl ?? 'Unknown'
+    phyla.set(ph, (phyla.get(ph) ?? 0) + 1)
+    if (o.tna && species.size < 8) species.add(o.tna)
+  }
+
+  if (!Number.isFinite(maxMa)) maxMa = 0
+  if (!Number.isFinite(minMa)) minMa = 0
+
+  const sorted = [...phyla.entries()].sort((a, b) => b[1] - a[1])
+  const total = occs.length
+
+  // 简单地理描述
+  const geo: string[] = []
+  if (maxLat > 60) geo.push('polar regions')
+  if (minLat < -60) geo.push('antarctic regions')
+  if (minLat >= -35 && maxLat <= 35) geo.push('tropical belt')
+  else if (minLat >= -55 && maxLat <= 55) geo.push('temperate–tropical zones')
+  const lngSpan = maxLng - minLng
+  if (lngSpan > 180) geo.push('cosmopolitan distribution')
+  else if (lngSpan > 90) geo.push('wide longitudinal range')
+
+  return {
+    totalOccurrences: total,
+    earliestMa: Math.round(maxMa * 10) / 10,
+    latestMa: Math.round(minMa * 10) / 10,
+    latRange: [Math.round(minLat), Math.round(maxLat)],
+    lngRange: [Math.round(minLng), Math.round(maxLng)],
+    geoSpread: geo.join(', ') || 'regional distribution',
+    phylumBreakdown: sorted.slice(0, 4).map(([name, count]) => ({
+      name, count, pct: Math.round((count / total) * 100),
+    })),
+    representativeSpecies: [...species].slice(0, 5),
+  }
+}
+
+/* ══════════════════════════════════════════════════
    Prompt 构造函数
    ══════════════════════════════════════════════════ */
 
@@ -451,19 +525,60 @@ export function buildIntervalPrompt(opts: {
   ].filter(Boolean).join('. ')
 }
 
-/** 场景 B —— 按分类群生成独具特色的科研插图 */
+/** 场景 B —— 按分类群生成独具特色的科研插图（含 PBDB 真实数据标注） */
 export function buildTaxonPrompt(opts: {
   taxonName: string
   description?: string
   intervalName?: string
+  /** 来自 PBDB 的真实化石统计 */
+  stats?: TaxonDataStats | null
 }): string {
   const name = opts.taxonName.replace(/\s*\(.*?\)/, '').trim()
   const tr = getTraits(name)
+  const s = opts.stats
+
+  /* ── 数据标注面板描述 ── */
+  const dataAnnotations: string[] = []
+
+  if (s) {
+    // 时间跨度标注
+    dataAnnotations.push(
+      `DATA PANEL (top-right corner, elegant serif on translucent parchment background): stratigraphic range bar showing "${s.earliestMa} Ma – ${s.latestMa} Ma" with geological period color bands`,
+    )
+
+    // 化石记录统计
+    dataAnnotations.push(
+      `specimen count annotation: "n = ${s.totalOccurrences} fossil occurrences" in small monospace font`,
+    )
+
+    // 地理分布小图
+    dataAnnotations.push(
+      `INSET mini-map (bottom-left corner): small oval world map silhouette with dot-cluster showing fossil distribution across ${s.geoSpread}, latitude range ${s.latRange[0]}° to ${s.latRange[1]}°`,
+    )
+
+    // 代表性物种列表
+    if (s.representativeSpecies.length > 0) {
+      const spp = s.representativeSpecies.slice(0, 4).join(', ')
+      dataAnnotations.push(
+        `species checklist annotation in italic: representative taxa include ${spp}`,
+      )
+    }
+
+    // 分类组成饼图/条形
+    if (s.phylumBreakdown.length > 1) {
+      const breakdown = s.phylumBreakdown
+        .map(p => `${p.name} ${p.pct}%`)
+        .join(', ')
+      dataAnnotations.push(
+        `small horizontal stacked bar showing taxonomic composition: ${breakdown}`,
+      )
+    }
+  }
 
   return [
-    `Museum-quality scientific plate of ${name}`,
+    `Museum-quality scientific data plate of ${name}`,
     /* 核心形态 */
-    `primary figure: full-body reconstruction showing ${tr.morphology}`,
+    `PRIMARY FIGURE (center): full-body reconstruction showing ${tr.morphology}`,
     /* 纹理与色彩 */
     `rendered with ${tr.texture}, coloring: ${tr.palette}`,
     /* 生态场景 */
@@ -471,13 +586,20 @@ export function buildTaxonPrompt(opts: {
     /* 比例 */
     `${tr.scale}`,
     /* 独特标识图 */
-    `secondary inset diagram: ${tr.signature}`,
-    /* 标注风格 */
-    `include fine anatomical leader lines pointing to 3–4 key diagnostic features with Latin labels`,
+    `MORPHOLOGY INSET (margin): ${tr.signature}`,
+    /* 解剖标注 */
+    `fine anatomical leader lines pointing to 4–6 key diagnostic features with Latin nomenclature labels in elegant serif font`,
+
+    /* 数据标注（来自 PBDB 真实数据） */
+    ...dataAnnotations,
+
+    /* 上下文 */
     opts.description && `context: ${opts.description}`,
-    opts.intervalName && `geological period label: "${opts.intervalName}"`,
-    /* 整体美学 */
-    `overall aesthetic: masterful blend of scientific rigor and fine art — muted parchment border, elegant serif typography, reminiscent of 19th-century zoological monograph plates by Ernst Haeckel combined with modern paleoart quality of Julius Csotonyi`,
+    opts.intervalName && `geological period label cartouche: "${opts.intervalName}"`,
+
+    /* 整体美学 — 强调数据可视化 */
+    `overall aesthetic: masterful scientific data visualization plate — combines anatomical illustration with quantitative data panels, muted parchment border with gold rule lines, elegant serif typography for labels and monospace for numerical data, inspired by 19th-century zoological monograph plates (Ernst Haeckel Kunstformen) merged with modern infographic precision (Edward Tufte principles) and paleoart quality of Julius Csotonyi`,
+    `CRITICAL: all text labels must be scientifically accurate Latin nomenclature, all numerical annotations must use clean typographic hierarchy, the plate should communicate both visual beauty AND quantitative information that answers scientific questions about this organism's temporal range, geographic distribution, and morphological key features`,
   ].filter(Boolean).join('. ')
 }
 
@@ -512,6 +634,7 @@ export function buildExtinctionDiptychPrompt(ev: ExtinctionEvent): string {
 export function buildDefaultPrompt(
   extinction: ExtinctionEvent | null,
   taxon: TaxonNode | null,
+  stats?: TaxonDataStats | null,
 ): { prompt: string; scene: 'diptych' | 'taxon' | 'idle' } {
   // 优先以具体类群生成 prompt — 用户点击生物时应看到对应物种的独特提示词
   if (taxon) {
@@ -520,6 +643,7 @@ export function buildDefaultPrompt(
         taxonName: taxon.nam,
         description: undefined,
         intervalName: extinction?.intervalBefore,
+        stats,
       }),
       scene: 'taxon',
     }

@@ -5,6 +5,7 @@ import { PhyloTree } from './components/PhyloTree'
 import { GeoMap } from './components/GeoMap'
 import { AICanvas } from './components/AICanvas'
 import { GuidedNarrative } from './components/GuidedNarrative'
+import { ExtinctionDiagnostic } from './components/ExtinctionDiagnostic'
 import { useExploreStore } from './stores/useExploreStore'
 import './styles/App.css'
 
@@ -12,6 +13,7 @@ export default function App() {
   const viewMode = useExploreStore(s => s.viewMode)
   const setMode  = useExploreStore(s => s.setViewMode)
   const selExt   = useExploreStore(s => s.selectedExtinction)
+  const setDiag  = useExploreStore(s => s.setDiagnosticOpen)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [flashKey, setFlashKey] = useState(0)
 
@@ -46,14 +48,17 @@ export default function App() {
           {/* 灭绝事件指示器 */}
           <AnimatePresence>
             {selExt && (
-              <motion.div className="app-ext-badge"
+              <motion.button className="app-ext-badge app-ext-badge--btn"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}>
+                transition={{ duration: 0.2 }}
+                onClick={() => setDiag(true)}
+                title="打开深度诊断">
                 <span className="app-ext-dot"/>
                 {selExt.nameZh} · {selExt.ma} Ma
-              </motion.div>
+                <span className="app-ext-badge-arrow">⊹</span>
+              </motion.button>
             )}
           </AnimatePresence>
 
@@ -100,6 +105,7 @@ export default function App() {
       </footer>
 
       <GuidedNarrative />
+      <ExtinctionDiagnostic />
     </div>
   )
 }

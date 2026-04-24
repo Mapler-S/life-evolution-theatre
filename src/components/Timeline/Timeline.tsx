@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDiversity, useTimeIntervals } from '../../hooks/usePBDB'
 import { BIG_FIVE_EXTINCTIONS, EARTH_TIMELINE } from '../../utils/geoTimeScale'
 import { useExploreStore } from '../../stores/useExploreStore'
+import { rafThrottle } from '../../utils/rafThrottle'
 import type { DiversityPoint, ExtinctionEvent, GeoInterval, TimeRange } from '../../types'
 import './Timeline.css'
 
@@ -38,12 +39,16 @@ export default function Timeline() {
   const selExt  = useExploreStore(s => s.selectedExtinction)
   const setSel  = useExploreStore(s => s.setSelectedExtinction)
   const setTR   = useExploreStore(s => s.setTimeRange)
+  const timeRng = useExploreStore(s => s.timeRange)
+  const rangeActive = timeRng[0] < 4600 || timeRng[1] > 0
 
-  /* ── 宽度 ─── */
+  /* ── 宽度（rAF 节流，避免连续 resize 多次重算 D3） ─── */
   useEffect(() => {
     const el = box.current; if (!el) return
-    const ro = new ResizeObserver(e => { const cw = e[0].contentRect.width; if (cw > 0) setW(cw) })
-    ro.observe(el); return () => ro.disconnect()
+    const update = rafThrottle((cw: number) => setW(cw))
+    const ro = new ResizeObserver(e => { const cw = e[0].contentRect.width; if (cw > 0) update(cw) })
+    ro.observe(el)
+    return () => { ro.disconnect(); update.cancel() }
   }, [])
 
   const iw = Math.max(200, w - M.left - M.right)
@@ -78,7 +83,11 @@ export default function Timeline() {
     const brush = d3.brushX<unknown>()
       .extent([[0, BANDS_Y - 4], [iw, BANDS_Y + ERA_H + GAP + PERIOD_H + 4]])
       .on('end', ev => {
-        if (!ev.selection) return
+        if (!ev.selection) {
+          // 点击空白 / 0 宽拖拽 → 清除已选范围
+          setTR([4600, 0] as TimeRange)
+          return
+        }
         const [a, b] = ev.selection as [number, number]
         setTR([inv(Math.min(a, b)), inv(Math.max(a, b))] as TimeRange)
       })
@@ -87,36 +96,52 @@ export default function Timeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [iw, setTR])
 
-  /* ── Zoom（滚轮，绑在主 <g>） ─── */
+  /* 清除按钮：同时清除 React 状态 + DOM 上的 brush selection */
+  const clearBrush = useCallback(() => {
+    setTR([4600, 0] as TimeRange)
+    const g = brRef.current
+    if (g) d3.select(g).call(d3.brushX().move as never, null)
+  }, [setTR])
+
+  /* ── Zoom（滚轮，绑在主 <g>；rAF 节流 zoom 回调） ─── */
   useEffect(() => {
     const g = gRef.current; if (!g) return
     const sel = d3.select(g)
+    const onZoom = rafThrottle((t: d3.ZoomTransform) => setZt(t))
     const zoom = d3.zoom<SVGGElement, unknown>()
       .scaleExtent([1, 8])
       .translateExtent([[0, 0], [iw, ih]])
       .extent([[0, 0], [iw, ih]])
       .filter(ev => ev.type === 'wheel' || ev.type === 'dblclick')
-      .on('zoom', ev => setZt(ev.transform))
+      .on('zoom', ev => onZoom(ev.transform))
     sel.call(zoom)
-    return () => { sel.on('.zoom', null) }
+    return () => { sel.on('.zoom', null); onZoom.cancel() }
   }, [iw, ih])
 
-  /* ── SVG hover（绑在 <svg> 上，不阻塞子元素） ─── */
+  /* ── SVG hover（rAF 节流，避免每像素 setState 卡顿） ─── */
+  const applyMove = useMemo(
+    () => rafThrottle((lx: number, cx: number, cy: number) => {
+      if (lx < 0 || lx > iw) { setHX(null); setTip(null); return }
+      const ma = inv(lx)
+      setHX(lx)
+      setTip({ cx, cy, content: (
+        <div className="tl-tt-inner">
+          <div className="tl-tt-ma">{ma.toFixed(1)} Ma</div>
+          {findIn(eras, ma)  && <div className="tl-tt-era">{findIn(eras, ma)!.nam}</div>}
+          {findIn(periods, ma) && <div className="tl-tt-per">{findIn(periods, ma)!.nam}</div>}
+        </div>
+      )})
+    }),
+    [iw, inv, eras, periods],
+  )
+  useEffect(() => () => applyMove.cancel(), [applyMove])
+
   function onMove(ev: React.MouseEvent<SVGSVGElement>) {
     const lx = ev.clientX - ev.currentTarget.getBoundingClientRect().left - M.left
-    if (lx < 0 || lx > iw) { setHX(null); setTip(null); return }
-    const ma = inv(lx)
-    setHX(lx)
-    setTip({ cx: ev.clientX, cy: ev.clientY, content: (
-      <div className="tl-tt-inner">
-        <div className="tl-tt-ma">{ma.toFixed(1)} Ma</div>
-        {findIn(eras, ma)  && <div className="tl-tt-era">{findIn(eras, ma)!.nam}</div>}
-        {findIn(periods, ma) && <div className="tl-tt-per">{findIn(periods, ma)!.nam}</div>}
-      </div>
-    )})
+    applyMove(lx, ev.clientX, ev.clientY)
   }
 
-  function onLeave() { setHX(null); setTip(null) }
+  function onLeave() { applyMove.cancel(); setHX(null); setTip(null) }
 
   /* ── 灭绝标记点击（toggle） ─── */
   const clickExt = useCallback((e: ExtinctionEvent) => {
@@ -126,6 +151,20 @@ export default function Timeline() {
   /* ══════════════ JSX ════════════════ */
   return (
     <div ref={box} className="tl-container">
+      {/* 框选范围提示 */}
+      <AnimatePresence>
+        {rangeActive && (
+          <motion.div className="tl-range-chip"
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}>
+            <span className="tl-range-chip-dot"/>
+            筛选范围：<b>{timeRng[0].toFixed(1)}</b>–<b>{timeRng[1].toFixed(1)}</b> Ma
+            <button className="tl-range-chip-clear" onClick={clearBrush}
+              title="清除筛选">×</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <svg width={w} height={HEIGHT} className="tl-svg"
         onMouseMove={onMove} onMouseLeave={onLeave}>
         <defs>

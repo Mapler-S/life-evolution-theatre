@@ -142,3 +142,34 @@
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 2px; color: rgba(246,241,230,0.6);
 }
+
+/* ── "深度诊断"入口按钮 ── */
+.pt-info-diag {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 12px; padding: 8px 14px;
+  background: linear-gradient(135deg,
+    rgba(201,154,59,0.22) 0%, rgba(139,38,53,0.28) 100%);
+  border: 1px solid rgba(201,154,59,0.45);
+  border-radius: 3px;
+  color: #f6f1e6;
+  font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative; overflow: hidden;
+}
+.pt-info-diag::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(201,154,59,0.25), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.pt-info-diag:hover {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 1px rgba(201,154,59,0.3), 0 4px 12px rgba(139,38,53,0.25);
+  transform: translateY(-1px);
+}
+.pt-info-diag:hover::before { transform: translateX(100%); }
+.pt-info-diag-icon { color: var(--color-accent-gold); font-size: 0.9rem; }
+.pt-info-diag-arrow { font-size: 0.9rem; transition: transform var(--transition-fast); }
+.pt-info-diag:hover .pt-info-diag-arrow { transform: translateX(3px); }

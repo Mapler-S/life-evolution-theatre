@@ -52,6 +52,23 @@
   font-family: var(--font-data); font-size: 0.72rem; font-weight: 500;
   color: var(--color-extinction); letter-spacing: 0.04em;
 }
+.app-ext-badge--btn {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.app-ext-badge--btn:hover {
+  background: rgba(139,38,53,0.18);
+  border-color: var(--color-extinction);
+  box-shadow: 0 0 0 1px rgba(139,38,53,0.15), var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.app-ext-badge-arrow {
+  color: var(--color-accent-gold); margin-left: 2px; font-size: 0.86rem;
+  transition: transform var(--transition-fast);
+}
+.app-ext-badge--btn:hover .app-ext-badge-arrow {
+  transform: scale(1.25) rotate(90deg);
+}
 .app-ext-dot {
   display: inline-block; width: 6px; height: 6px; border-radius: 50%;
   background: var(--color-extinction);

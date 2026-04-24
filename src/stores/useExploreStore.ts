@@ -43,6 +43,9 @@ interface ExploreState {
   // —— AI 画廊 ——
   gallery: AIImageResult[]
 
+  // —— 灭绝诊断面板 ——
+  diagnosticOpen: boolean
+
   // —— Setters ——
   setCurrentInterval: (interval: GeoInterval | null) => void
   setSelectedTaxon: (taxon: TaxonNode | null) => void
@@ -56,6 +59,7 @@ interface ExploreState {
   removeGalleryImage: (id: string) => void
   clearGallery: () => void
   resetSelection: () => void
+  setDiagnosticOpen: (open: boolean) => void
 }
 
 const DEFAULT_TIME_RANGE: TimeRange = [4600, 0]
@@ -70,8 +74,9 @@ export const useExploreStore = create<ExploreState>()(
       timeRange: DEFAULT_TIME_RANGE,
       viewMode: 'explore',
       aiApiKey: '',
-      aiProvider: 'stability',
+      aiProvider: 'nanobanana',
       gallery: [],
+      diagnosticOpen: false,
 
       setCurrentInterval: (interval) => set({ currentInterval: interval }),
       setSelectedTaxon: (taxon) => set({ selectedTaxon: taxon }),
@@ -96,6 +101,7 @@ export const useExploreStore = create<ExploreState>()(
           selectedExtinction: null,
           hoveredItem: null,
         }),
+      setDiagnosticOpen: (open) => set({ diagnosticOpen: open }),
     }),
     {
       name: 'life-evolution-theatre/explore',

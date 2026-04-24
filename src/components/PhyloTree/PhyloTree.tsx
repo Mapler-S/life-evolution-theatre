@@ -3,6 +3,8 @@ import * as d3 from 'd3'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PHYLO_SEED, PHYLO_SEED_PLANTAE, nodeStatus, type NodeStatus, type PhyloTreeNode } from '../../utils/phyloSeed'
 import { useExploreStore } from '../../stores/useExploreStore'
+import { rafThrottle } from '../../utils/rafThrottle'
+import { usePhyloLayout } from '../../hooks/usePhyloLayout'
 import './PhyloTree.css'
 
 /* ── 布局 ── */
@@ -25,9 +27,14 @@ const LOPA: Record<NodeStatus, number> = {
 }
 
 /* ── 类型 ── */
-type HN = d3.HierarchyPointNode<PhyloTreeNode>
-
 interface Tip { cx: number; cy: number; node: PhyloTreeNode; status: NodeStatus }
+
+/** 递归扁平化 PhyloTreeNode，构建 id → 原始节点的索引 */
+function indexById(root: PhyloTreeNode, out: Map<string, PhyloTreeNode> = new Map()): Map<string, PhyloTreeNode> {
+  out.set(root.id, root)
+  root.children?.forEach(c => indexById(c, out))
+  return out
+}
 
 /* ══════════════════════════════════════════════════ */
 export default function PhyloTree() {
@@ -39,6 +46,7 @@ export default function PhyloTree() {
 
   const selExt = useExploreStore(s => s.selectedExtinction)
   const setTax = useExploreStore(s => s.setSelectedTaxon)
+  const setDiagOpen = useExploreStore(s => s.setDiagnosticOpen)
   const [shaking, setShaking] = useState(false)
   const [infoDismissed, setInfoDismissed] = useState(false)
 
@@ -54,48 +62,66 @@ export default function PhyloTree() {
   const seedTree = kingdom === 'animalia' ? PHYLO_SEED : PHYLO_SEED_PLANTAE
   const data = drill ?? seedTree
 
-  /* ── 布局 ── */
-  const root = useMemo(() =>
-    d3.cluster<PhyloTreeNode>()
-      .size([2 * Math.PI, R])
-      .separation((a, b) => (a.parent === b.parent ? 1 : 1.8) / a.depth)
-      (d3.hierarchy<PhyloTreeNode>(data)),
-  [data])
+  /* ── 布局（Web Worker 异步 / 同步 fallback） ── */
+  const { nodes: laidNodes, links: laidLinks } = usePhyloLayout(data, R)
 
-  const nodes = useMemo(() => root.descendants(), [root])
-  const links = useMemo(() => root.links(), [root])
+  /* id → 原始 PhyloTreeNode / 父/子 的索引（供渲染 & 高亮使用） */
+  const dataById = useMemo(() => indexById(data), [data])
+  const childrenMap = useMemo(() => {
+    const m = new Map<string, string[]>()
+    laidLinks.forEach(l => {
+      const arr = m.get(l.sourceId); arr ? arr.push(l.targetId) : m.set(l.sourceId, [l.targetId])
+    })
+    return m
+  }, [laidLinks])
+  const parentMap = useMemo(() => {
+    const m = new Map<string, string>()
+    laidLinks.forEach(l => m.set(l.targetId, l.sourceId))
+    return m
+  }, [laidLinks])
 
   const linkGen = useMemo(() =>
-    d3.linkRadial<d3.HierarchyPointLink<PhyloTreeNode>, HN>()
+    d3.linkRadial<{ source: { x: number; y: number }, target: { x: number; y: number } }, { x: number; y: number }>()
       .angle(d => d.x).radius(d => d.y),
   [])
 
   /* ── 状态函数 ── */
   const st = useCallback((n: PhyloTreeNode) => nodeStatus(n, selExt), [selExt])
 
-  const linkSt = useCallback(
-    (l: d3.HierarchyPointLink<PhyloTreeNode>) => st(l.target.data),
-  [st])
+  const linkStFor = useCallback((targetId: string) => {
+    const n = dataById.get(targetId)
+    return n ? st(n) : 'alive'
+  }, [dataById, st])
 
   /* ── 祖先+子孙高亮集 ── */
   const hlSet = useMemo(() => {
-    if (!hovId) return new Set<string>()
     const s = new Set<string>()
-    function walk(n: HN): boolean {
-      if (n.data.id === hovId) {
-        n.descendants().forEach(d => s.add(d.data.id))
-        return true
-      }
-      if (n.children) for (const c of n.children) if (walk(c)) { s.add(n.data.id); return true }
-      return false
+    if (!hovId) return s
+    // 自身 + 所有后代（BFS）
+    const queue = [hovId]
+    while (queue.length) {
+      const id = queue.shift()!
+      s.add(id)
+      const ch = childrenMap.get(id)
+      if (ch) queue.push(...ch)
     }
-    walk(root)
+    // 所有祖先
+    let p = parentMap.get(hovId)
+    while (p) { s.add(p); p = parentMap.get(p) }
     return s
-  }, [hovId, root])
+  }, [hovId, childrenMap, parentMap])
 
   /* ── 坐标 ── */
   const rx = (a: number, r: number) => r * Math.cos(a - Math.PI / 2)
   const ry = (a: number, r: number) => r * Math.sin(a - Math.PI / 2)
+
+  /* ── tooltip 移动节流 ── */
+  const moveTip = useMemo(
+    () => rafThrottle((cx: number, cy: number) =>
+      setTip(p => p ? { ...p, cx, cy } : p)),
+    [],
+  )
+  useEffect(() => () => moveTip.cancel(), [moveTip])
 
   return (
     <div ref={cRef} className={`pt-box${shaking ? ' pt-box--shake' : ''}`}>
@@ -119,12 +145,15 @@ export default function PhyloTree() {
         <g transform={`translate(${CX},${CX})`}>
 
           {/* 连接线 */}
-          {links.map(l => {
-            const ls = linkSt(l)
-            const hl = hlSet.has(l.source.data.id) && hlSet.has(l.target.data.id)
-            const d = linkGen(l)
+          {laidLinks.map(l => {
+            const ls = linkStFor(l.targetId)
+            const hl = hlSet.has(l.sourceId) && hlSet.has(l.targetId)
+            const d = linkGen({
+              source: { x: l.sx, y: l.sy },
+              target: { x: l.tx, y: l.ty },
+            })
             return d ? (
-              <motion.path key={`${l.source.data.id}-${l.target.data.id}`}
+              <motion.path key={`${l.sourceId}-${l.targetId}`}
                 d={d} fill="none" className="pt-link"
                 initial={false}
                 animate={{
@@ -137,19 +166,21 @@ export default function PhyloTree() {
           })}
 
           {/* 节点 */}
-          {nodes.map(hn => {
-            const d = hn.data, s = st(d)
-            const hl = hlSet.has(d.id), leaf = !hn.children
-            const px = rx(hn.x, hn.y), py = ry(hn.x, hn.y)
+          {laidNodes.map(ln => {
+            const d = dataById.get(ln.id)
+            if (!d) return null
+            const s = st(d)
+            const hl = hlSet.has(d.id), leaf = ln.isLeaf
+            const px = rx(ln.x, ln.y), py = ry(ln.x, ln.y)
             const nr = rScale(d.size)
 
             return (
               <g key={d.id} className="pt-node"
                 onMouseEnter={e => { setHovId(d.id); setTip({ cx: e.clientX, cy: e.clientY, node: d, status: s }) }}
-                onMouseMove={e => setTip(p => p ? { ...p, cx: e.clientX, cy: e.clientY } : p)}
-                onMouseLeave={() => { setHovId(null); setTip(null) }}
+                onMouseMove={e => moveTip(e.clientX, e.clientY)}
+                onMouseLeave={() => { moveTip.cancel(); setHovId(null); setTip(null) }}
                 onClick={() => setTax({ oid: d.id, nam: d.name, rnk: 0 })}
-                onDoubleClick={() => { if (hn.children?.length) setDrill(d) }}>
+                onDoubleClick={() => { if (d.children?.length) setDrill(d) }}>
 
                 {/* 灭绝脉冲光环 */}
                 {s === 'dying-now' && (
@@ -177,9 +208,9 @@ export default function PhyloTree() {
                 {/* 叶标签 */}
                 {leaf && (
                   <text x={px} y={py}
-                    dx={hn.x < Math.PI ? 10 : -10} dy="0.35em"
-                    textAnchor={hn.x < Math.PI ? 'start' : 'end'}
-                    transform={`rotate(${lblAngle(hn.x)},${px},${py})`}
+                    dx={ln.x < Math.PI ? 10 : -10} dy="0.35em"
+                    textAnchor={ln.x < Math.PI ? 'start' : 'end'}
+                    transform={`rotate(${lblAngle(ln.x)},${px},${py})`}
                     className={`pt-lbl pt-lbl--${s}`}>
                     {d.nameZh.replace(/（.*）/, '')}
                   </text>
@@ -210,6 +241,11 @@ export default function PhyloTree() {
                 <span key={t} className="pt-info-tag">{t}</span>
               ))}
             </div>
+            <button className="pt-info-diag" onClick={() => setDiagOpen(true)}>
+              <span className="pt-info-diag-icon">⊹</span>
+              打开深度诊断
+              <span className="pt-info-diag-arrow">→</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

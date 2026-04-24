@@ -7,6 +7,20 @@ export default defineConfig({
   base: '/life-evolution-theatre/',
   server: {
     proxy: {
+      '/api/pbdb': {
+        target: 'https://paleobiodb.org',
+        changeOrigin: true,
+        secure: true,
+        // 长连接复用 + 更宽容的超时，缓解境外 API 被 RST 的问题
+        timeout: 45_000,
+        proxyTimeout: 45_000,
+        rewrite: (path) => path.replace(/^\/api\/pbdb/, ''),
+      },
+      '/api/nanobanana': {
+        target: 'https://api.nanobananaapi.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/nanobanana/, ''),
+      },
       '/api/stability': {
         target: 'https://api.stability.ai',
         changeOrigin: true,

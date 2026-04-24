@@ -40,6 +40,84 @@ interface GenerateArgs {
   signal?: AbortSignal
 }
 
+/**
+ * 调用 NanoBanana 接口（异步任务 + 轮询）
+ * - POST /api/v1/nanobanana/generate-2 → 返回 taskId
+ * - GET  /api/v1/nanobanana/record-info?taskId=xxx → 轮询直至 successFlag=1
+ */
+async function generateNanoBanana({
+  prompt,
+  apiKey,
+  signal,
+}: GenerateArgs): Promise<string> {
+  const create = await fetch('/api/nanobanana/api/v1/nanobanana/generate-2', {
+    method: 'POST',
+    signal,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt,
+      aspectRatio: '16:9',
+      resolution: '1K',
+      outputFormat: 'png',
+    }),
+  })
+  if (!create.ok) {
+    throw new Error(await extractErrorMessage(create, 'NanoBanana'))
+  }
+  const created = (await create.json()) as {
+    code: number
+    message?: string
+    msg?: string
+    data?: { taskId?: string }
+  }
+  if (created.code !== 200 || !created.data?.taskId) {
+    throw new Error(
+      `NanoBanana: ${created.message ?? created.msg ?? '任务创建失败'}`,
+    )
+  }
+  const taskId = created.data.taskId
+
+  // 轮询（最多 90 次，间隔 2s，总计约 3 分钟）
+  for (let i = 0; i < 90; i++) {
+    await delay(2000, signal)
+    const poll = await fetch(
+      `/api/nanobanana/api/v1/nanobanana/record-info?taskId=${encodeURIComponent(taskId)}`,
+      {
+        signal,
+        headers: { Authorization: `Bearer ${apiKey}` },
+      },
+    )
+    if (!poll.ok) {
+      throw new Error(await extractErrorMessage(poll, 'NanoBanana'))
+    }
+    const state = (await poll.json()) as {
+      code: number
+      data?: {
+        successFlag?: number
+        errorMessage?: string
+        response?: { resultImageUrl?: string; originImageUrl?: string }
+      }
+    }
+    const d = state.data
+    if (!d) continue
+    // 1: 成功；2/3: 失败；0: 进行中
+    if (d.successFlag === 1) {
+      const url = d.response?.resultImageUrl ?? d.response?.originImageUrl
+      if (!url) throw new Error('NanoBanana: 返回结果中无图像 URL')
+      return url
+    }
+    if (d.successFlag === 2 || d.successFlag === 3) {
+      throw new Error(
+        `NanoBanana: ${d.errorMessage ?? '生成失败'}`,
+      )
+    }
+  }
+  throw new Error('NanoBanana: 生成超时')
+}
+
 /** 调用 Stability AI Core 接口，返回 PNG blob URL */
 async function generateStability({
   prompt,
@@ -163,6 +241,7 @@ async function generateReplicate({
 }
 
 const PROVIDERS: Record<AIProvider, (args: GenerateArgs) => Promise<string>> = {
+  nanobanana: generateNanoBanana,
   stability: generateStability,
   dalle: generateDalle,
   replicate: generateReplicate,
